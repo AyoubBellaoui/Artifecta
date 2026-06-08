@@ -9,9 +9,24 @@ export const navLinks = [
 ];
 
 export const teamMembers = [
-  { name: "Alex Carter", initials: "AC" },
-  { name: "Maya Reed", initials: "MR" },
-  { name: "Noah Kim", initials: "NK" },
+  {
+    name: "Ayoub B.",
+    initials: "AB",
+    role: "Chef de Groupe",
+    specialty: "Backend Development",
+  },
+  {
+    name: "Alae",
+    initials: "AL",
+    role: "Creative Director",
+    specialty: "Design & Frontend",
+  },
+  {
+    name: "Abdlwadoud",
+    initials: "AW",
+    role: "Growth Strategist",
+    specialty: "Marketing",
+  },
 ];
 
 export const projectTypes = [
@@ -25,19 +40,27 @@ export const projectTypes = [
 
 export const projects = [
   {
+    title: "M3alemConnect",
+    description:
+      "A smart platform connecting Moroccan homeowners with skilled tradesmen for construction, renovation, and repair work — find the right worker, fast.",
+    tags: ["Platform Design", "Web Development", "UX/UI"],
+    gradient: "linear-gradient(135deg, #0f2744, #1a4a8a)",
+    accentColor: "#c8a04a",
+    logo: "/WhatsApp Image 2026-05-05 at 14.37.32.jpeg",
+    url: "#",
+    featured: true,
+  },
+  {
     title: "Zupitar",
-    tags: ["Product design", "Motion design"],
+    description: "A dynamic music platform with seamless UX and fluid motion design.",
+    tags: ["Product Design", "Motion Design"],
     gradient: "linear-gradient(135deg, #e52d5e, #ff4d6d)",
   },
   {
     title: "Nexora",
-    tags: ["Product design", "Development"],
+    description: "An AI-powered analytics dashboard built for data-driven teams.",
+    tags: ["Product Design", "Development"],
     gradient: "linear-gradient(135deg, #f77f00, #fcbf49)",
-  },
-  {
-    title: "Aura",
-    tags: ["Brand Identity", "Web Design"],
-    gradient: "linear-gradient(135deg, #d62828, #f77f00)",
   },
 ];
 
