@@ -1,0 +1,12 @@
+{
+  "name": "m3alemconnect-cdc-generator",
+  "version": "1.0.0",
+  "description": "Generates the M3alemConnect Cahier des Charges as a Word document",
+  "main": "generate.js",
+  "scripts": {
+    "generate": "node generate.js"
+  },
+  "dependencies": {
+    "docx": "^7.8.2"
+  }
+}
