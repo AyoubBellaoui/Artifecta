@@ -1,109 +1,70 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useI18n } from '../i18n/I18nProvider';
+import Avatar from './Avatar';
+import Icon from './Icon';
 import StarRating from './StarRating';
 
-const AVATAR_COLORS = ['#3B82F6','#F59E0B','#8B5CF6','#EF4444','#10B981','#06B6D4','#D97706','#6366F1'];
-
-export default function ArtisanCard({ artisan, index = 0 }) {
-  const initials = artisan.initials || `${artisan.first_name?.[0] || ''}${artisan.last_name?.[0] || ''}`;
-  const avatarColor = artisan.color || AVATAR_COLORS[index % AVATAR_COLORS.length];
-  const isDemo = typeof artisan.id === 'string' && artisan.id.startsWith('demo-');
-  const profileLink = isDemo ? '/register' : `/artisans/${artisan.id}`;
+export default function ArtisanCard({ artisan }) {
+  const { t, formatNumber, cityName, categoryName } = useI18n();
+  const verified = Boolean(artisan.artisan_verified ?? artisan.is_verified);
+  const rating = Number(artisan.rating_avg) || 0;
+  const hourlyRate = Number(artisan.hourly_rate) || 0;
+  const subtitle = [categoryName(artisan), cityName(artisan.city)].filter(Boolean).join(' · ');
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.07, duration: 0.4 }}
-      className="card card-hover group flex flex-col"
-    >
-      {/* Top section */}
-      <div className="relative">
-        {/* Background band */}
-        <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${avatarColor}20, ${avatarColor}08)` }} />
-
-        {/* Avatar */}
-        <div className="absolute left-5 -bottom-6">
-          {artisan.avatar_url ? (
-            <img src={artisan.avatar_url} alt=""
-              className="w-16 h-16 rounded-2xl object-cover border-3 border-white shadow-lg" />
-          ) : (
-            <div className="w-16 h-16 rounded-2xl border-3 border-white shadow-lg flex items-center justify-center text-white font-display font-bold text-xl"
-              style={{ background: `linear-gradient(135deg, ${avatarColor}, ${avatarColor}cc)` }}>
-              {initials}
-            </div>
-          )}
-          {artisan.is_available && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald rounded-full border-2 border-white" title="Disponible" />
-          )}
-        </div>
-
-        {/* Badges top right */}
-        <div className="absolute top-3 right-3 flex gap-1.5">
-          {artisan.is_premium && (
-            <span className="bg-saffron text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">⭐ Premium</span>
-          )}
-          {artisan.is_verified && (
-            <span className="bg-emerald text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">✓ Vérifié</span>
-          )}
+    <article className="card group relative flex flex-col p-5 transition-shadow duration-200 hover:shadow-raised">
+      <div className="flex items-start gap-3.5">
+        <Avatar firstName={artisan.first_name} lastName={artisan.last_name} src={artisan.avatar_url} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <h3 className="truncate text-base font-semibold text-navy-900">
+              {/* Stretched link: the whole card is clickable while keeping one focusable element. */}
+              <Link to={`/artisans/${artisan.id}`} className="after:absolute after:inset-0 after:rounded-lg focus-visible:outline-none">
+                <bdi>{artisan.first_name} {artisan.last_name}</bdi>
+              </Link>
+            </h3>
+            {verified && <Icon name="shieldCheck" className="h-4 w-4 text-emerald-600" title={t('card.verifiedTitle')} />}
+          </div>
+          <p className="mt-0.5 truncate text-sm text-sand-600">{subtitle}</p>
         </div>
       </div>
 
-      {/* Card body */}
-      <div className="pt-9 px-5 pb-5 flex flex-col flex-1">
-        <div className="mb-3">
-          <h3 className="font-display font-bold text-navy text-base group-hover:text-saffron transition-colors leading-tight">
-            {artisan.first_name} {artisan.last_name}
-          </h3>
-          <div className="flex items-center gap-1.5 mt-1">
-            <span className="text-sm">{artisan.category_icon}</span>
-            <span className="text-gray-500 text-sm font-medium">{artisan.category_name}</span>
-          </div>
-        </div>
-
-        {/* Rating */}
-        <div className="flex items-center gap-2 mb-3">
-          <div className="flex">
-            {[1,2,3,4,5].map(n => (
-              <span key={n} className={`text-sm ${n <= Math.round(artisan.rating_avg || 0) ? 'text-saffron' : 'text-gray-200'}`}>★</span>
-            ))}
-          </div>
-          <span className="text-gray-600 text-xs font-semibold">{Number(artisan.rating_avg || 0).toFixed(1)}</span>
-          <span className="text-gray-400 text-xs">({artisan.rating_count || 0})</span>
-        </div>
-
-        {/* Meta row */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <span className="text-xs text-gray-500 flex items-center gap-1">
-            <span>📍</span> {artisan.city || 'Maroc'}
-          </span>
-          {artisan.years_experience > 0 && (
-            <span className="text-xs text-gray-500 flex items-center gap-1">
-              <span>🏆</span> {artisan.years_experience} ans
-            </span>
-          )}
-          {artisan.total_jobs > 0 && (
-            <span className="text-xs text-gray-500 flex items-center gap-1">
-              <span>✅</span> {artisan.total_jobs} missions
-            </span>
-          )}
-        </div>
-
-        {/* Price */}
-        {artisan.hourly_rate && (
-          <div className="text-saffron font-bold text-sm mb-4">
-            À partir de <span className="text-base">{artisan.hourly_rate}</span> MAD/h
-          </div>
+      <div className="mt-4 flex items-center justify-between gap-2">
+        {rating > 0 ? (
+          <StarRating rating={rating} showValue count={artisan.rating_count} />
+        ) : (
+          <span className="chip-neutral">{t('common.newProfile')}</span>
         )}
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* CTA */}
-        <Link to={profileLink} className="btn-primary w-full py-2.5 text-sm mt-1">
-          {isDemo ? 'S\'inscrire pour voir' : 'Voir le profil'}
-        </Link>
+        {artisan.is_premium ? <span className="chip-premium">{t('common.premium')}</span> : null}
       </div>
-    </motion.div>
+
+      <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-sand-200 pt-4">
+        <div>
+          <dt className="text-xs text-sand-600">{t('common.experience')}</dt>
+          <dd className="mt-0.5 text-sm font-medium text-navy-900">{t('common.years', { count: Number(artisan.years_experience) || 0 })}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-sand-600">{t('common.missions')}</dt>
+          <dd className="mt-0.5 text-sm font-medium text-navy-900">{formatNumber(artisan.total_jobs)}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-sand-600">{t('common.rate')}</dt>
+          <dd className="mt-0.5 text-sm font-medium text-navy-900">
+            {hourlyRate ? t('common.hourlyRate', { amount: formatNumber(hourlyRate) }) : t('common.onRequest')}
+          </dd>
+        </div>
+      </dl>
+
+      <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${artisan.is_available ? 'text-emerald-700' : 'text-sand-500'}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${artisan.is_available ? 'bg-emerald-500' : 'bg-sand-400'}`} />
+          {artisan.is_available ? t('common.available') : t('common.unavailable')}
+        </span>
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-navy-700 transition-colors group-hover:text-navy-900">
+          {t('common.viewProfile')}
+          <Icon name="arrowRight" className="h-4 w-4 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" flipInRtl />
+        </span>
+      </div>
+    </article>
   );
 }

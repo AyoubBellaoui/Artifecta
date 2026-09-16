@@ -4,24 +4,37 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: { DEFAULT: '#001A33', 50: '#e6edf5', 100: '#ccd9eb', 200: '#99b4d6', 300: '#668ec2', 400: '#3369ad', 500: '#004d99', 600: '#003d7a', 700: '#002e5c', 800: '#001f3d', 900: '#001A33' },
-        saffron: { DEFAULT: '#D99000', 50: '#fdf5e0', 100: '#faeab5', 200: '#f5d466', 300: '#f0bf17', 400: '#D99000', 500: '#b87800', 600: '#966000', 700: '#744900', 800: '#533200', 900: '#311c00' },
-        emerald: { DEFAULT: '#065F2E', 50: '#e6f5ee', 100: '#ccebdc', 200: '#99d6b9', 300: '#66c296', 400: '#33ad74', 500: '#07993e', 600: '#067a32', 700: '#065F2E', 800: '#04451f', 900: '#022b13' },
-        cream: { DEFAULT: '#F2F0E6', 50: '#fafaf7', 100: '#F2F0E6', 200: '#e8e4d4', 300: '#d4ceb8', 400: '#b8af90', 500: '#9c9068' },
+        navy: {
+          50: '#F0F4F8', 100: '#DCE4EC', 200: '#B8C8D8', 300: '#8BA3BC', 400: '#5A7A99',
+          500: '#365A7C', 600: '#234563', 700: '#183551', 800: '#0F2A44', 900: '#0A1D30', 950: '#06121F',
+          DEFAULT: '#0F2A44',
+        },
+        saffron: {
+          50: '#FDF7EA', 100: '#FAEBC9', 200: '#F4D48E', 300: '#EDBB52', 400: '#E3A21F',
+          500: '#D99000', 600: '#B57600', 700: '#8C5B00', 800: '#6A4500', 900: '#4A3000',
+          DEFAULT: '#D99000',
+        },
+        emerald: {
+          50: '#ECF6F0', 100: '#D2EADB', 200: '#A6D4B8', 400: '#3E9E66', 500: '#1B8049',
+          600: '#0B6B3A', 700: '#095830', 800: '#074425',
+          DEFAULT: '#0B6B3A',
+        },
+        sand: {
+          50: '#FAF9F6', 100: '#F3F1EB', 200: '#E7E3DA', 300: '#D5CFC2', 400: '#ADA696',
+          500: '#857E70', 600: '#666054', 700: '#4B463E', 800: '#322F2A',
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Poppins', 'sans-serif'],
+        sans: ['"IBM Plex Sans"', '"IBM Plex Sans Arabic"', 'system-ui', 'sans-serif'],
+        arabic: ['"IBM Plex Sans Arabic"', '"IBM Plex Sans"', 'system-ui', 'sans-serif'],
       },
-      borderWidth: { '3': '3px' },
-      animation: {
-        'fade-in': 'fadeIn 0.5s ease-in-out',
-        'slide-up': 'slideUp 0.5s ease-out',
-        'pulse-slow': 'pulse 3s ease-in-out infinite',
+      maxWidth: {
+        page: '1200px',
       },
-      keyframes: {
-        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+      boxShadow: {
+        card: '0 1px 2px rgba(15, 42, 68, 0.06), 0 1px 1px rgba(15, 42, 68, 0.03)',
+        raised: '0 8px 24px -12px rgba(15, 42, 68, 0.22)',
+        pop: '0 16px 40px -12px rgba(15, 42, 68, 0.28)',
       },
     },
   },

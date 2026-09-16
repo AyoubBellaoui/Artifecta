@@ -37,18 +37,18 @@ export default function HeroSection() {
         <motion.h1
           className="font-unbounded font-bold leading-tight mb-6"
           style={{
-            fontSize: "clamp(2.2rem, 6vw, 4.2rem)",
+            fontSize: "clamp(2rem, 4.4vw, 4.2rem)",
             color: "#142638",
-            maxWidth: "1200px",
+            maxWidth: "1440px",
           }}
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
         >
           <span className="hero-line">
-            The perfect fusion of <span className="text-outlined">AI,</span>
+            La fusion parfaite de <span className="text-outlined">l’IA,</span>
           </span>
-          <span className="text-outlined hero-line">Design, and Engineering</span>
+          <span className="text-outlined hero-line">du Design et de l’Ingénierie</span>
         </motion.h1>
 
         <motion.p
@@ -56,15 +56,15 @@ export default function HeroSection() {
           style={{
             color: "#142638",
             fontSize: "1.2rem",
-            maxWidth: "560px",
+            maxWidth: "640px",
             lineHeight: 1.6,
           }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.55 }}
         >
-          We craft scalable digital experiences powered by design, technology,
-          and artificial intelligence.
+          Nous concevons des expériences digitales évolutives, portées par le
+          design, la technologie et l’intelligence artificielle.
         </motion.p>
 
         <motion.a
@@ -85,7 +85,7 @@ export default function HeroSection() {
           whileHover={{ scale: 1.06, boxShadow: "0 8px 32px rgba(20,38,56,0.22)" }}
           whileTap={{ scale: 0.97 }}
         >
-          Get Started
+          Démarrer un projet
           <motion.span
             style={{ fontSize: "1.1rem", display: "inline-block" }}
             whileHover={{ x: 4 }}

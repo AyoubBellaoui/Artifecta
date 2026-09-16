@@ -13,7 +13,7 @@ export default function Navbar() {
       <div className="flex items-center gap-2">
         <img
           src={LOGO_SRC}
-          alt="Artifecta logo"
+          alt="Logo Artifecta"
           style={{ width: 60, height: 55, objectFit: "contain" }}
         />
         <span

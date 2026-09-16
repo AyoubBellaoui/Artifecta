@@ -2,6 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { CONTACT_IMAGE_SRC, projectTypes } from "../../constants/site";
 
+const SEND_ERROR_MESSAGE =
+  "Impossible d’envoyer votre message pour le moment. Veuillez réessayer.";
+
 const initialForm = {
   name: "",
   email: "",
@@ -30,25 +33,21 @@ export default function ContactSection() {
         body: JSON.stringify(form),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(payload.error || "Unable to send your message right now.");
+        setStatus({ type: "error", message: payload.error || SEND_ERROR_MESSAGE });
+        return;
       }
 
       setStatus({
         type: "success",
-        message: payload.message || "Message sent successfully.",
+        message: payload.message || "Message envoyé avec succès.",
       });
       setForm(initialForm);
-    } catch (error) {
-      setStatus({
-        type: "error",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Unable to send your message right now.",
-      });
+    } catch {
+      // Network failures surface browser-generated (English) messages, so show ours instead.
+      setStatus({ type: "error", message: SEND_ERROR_MESSAGE });
     } finally {
       setIsSubmitting(false);
     }
@@ -80,10 +79,10 @@ export default function ContactSection() {
                 lineHeight: 1.6,
               }}
             >
-              "Great things in business are never done by one person. They're done
-              by a team of people."
+              «&nbsp;Les grandes choses dans les affaires ne sont jamais accomplies
+              par une seule personne. Elles sont l’œuvre d’une équipe.&nbsp;»
               <br />
-              Let's build something extraordinary together.
+              Construisons ensemble quelque chose d’extraordinaire.
             </p>
 
             <form
@@ -94,7 +93,7 @@ export default function ContactSection() {
                 className="contact-input"
                 type="text"
                 name="name"
-                placeholder="Your Name"
+                placeholder="Votre nom"
                 value={form.name}
                 onChange={(event) => updateField("name", event.target.value)}
                 required
@@ -103,7 +102,7 @@ export default function ContactSection() {
                 className="contact-input"
                 type="email"
                 name="email"
-                placeholder="Your Email"
+                placeholder="Votre adresse e-mail"
                 value={form.email}
                 onChange={(event) => updateField("email", event.target.value)}
                 required
@@ -120,7 +119,7 @@ export default function ContactSection() {
                   required
                 >
                   <option value="" disabled style={{ color: "#142638" }}>
-                    Project Type
+                    Type de projet
                   </option>
                   {projectTypes.map((projectType) => (
                     <option
@@ -153,7 +152,7 @@ export default function ContactSection() {
               <textarea
                 className="contact-input"
                 name="message"
-                placeholder="Your Message"
+                placeholder="Votre message"
                 rows={4}
                 value={form.message}
                 onChange={(event) => updateField("message", event.target.value)}
@@ -191,10 +190,10 @@ export default function ContactSection() {
                 transition={{ duration: 0.25 }}
               >
                 {isSubmitting
-                  ? "Sending..."
+                  ? "Envoi en cours…"
                   : status.type === "success"
-                    ? "Message Sent ✓"
-                    : "Let's Work Together →"}
+                    ? "Message envoyé ✓"
+                    : "Travaillons ensemble →"}
               </motion.button>
             </form>
           </motion.div>
@@ -212,7 +211,7 @@ export default function ContactSection() {
           >
             <img
               src={CONTACT_IMAGE_SRC}
-              alt="Contact background"
+              alt="Illustration de contact"
               className="w-full h-auto object-cover rounded-3xl shadow-2xl"
               style={{ maxHeight: "520px" }}
             />

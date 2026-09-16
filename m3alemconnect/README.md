@@ -1,109 +1,122 @@
-# M3alemConnect 🇲🇦
+# M3alem Connect 🇲🇦
 
-> **الحرفي المناسب... وقت ما تحتاج**
-> La marketplace marocaine de confiance pour les artisans et travailleurs qualifiés.
+> **الحرفي المناسب، في الوقت المناسب** — Le bon artisan, au bon moment.
+>
+> Plateforme marocaine de mise en relation entre particuliers et artisans qualifiés.
+> Interface bilingue français / arabe (avec mise en page RTL complète).
 
-## Stack Technique
+## Stack technique
 
 | Couche | Technologie |
 |--------|-------------|
-| Frontend | React 18 + Vite + Tailwind CSS + Framer Motion |
-| Backend | Node.js + Express |
-| Base de données | MySQL |
-| Auth | JWT + bcrypt |
-| Uploads | Multer |
+| Frontend | React 18 + Vite + Tailwind CSS |
+| Base de données | Supabase (PostgreSQL) |
+| Authentification | Supabase Auth (e-mail + mot de passe) |
+| Photos | Supabase Storage |
+| Sécurité | Row Level Security + fonctions SQL |
 
-## Démarrage rapide
+Il n'y a **pas de serveur à lancer** : le site parle directement à Supabase.
+Le dossier `backend/` contient l'ancienne API Express + MySQL, conservée pour référence ; elle n'est plus utilisée.
+
+## Démarrage
 
 ### 1. Prérequis
 - Node.js ≥ 18
-- MySQL (XAMPP, WAMP, ou standalone)
+- Un projet Supabase (gratuit) — [supabase.com](https://supabase.com)
 
-### 2. Base de données
+### 2. Créer la base de données
 
-```bash
-# Créer la base et insérer les données
-mysql -u root -p < backend/database/schema.sql
-# OU
-cd backend && node database/setup.js
-```
+Dans le tableau de bord Supabase : **SQL Editor → New query**, coller le contenu de
+[`supabase/schema.sql`](supabase/schema.sql) puis **Run**.
 
-### 3. Backend
+Le script crée les tables, les règles de sécurité, le stockage des photos et les données de départ
+(les 8 métiers et les 3 offres d'abonnement). Il peut être relancé sans risque.
 
-```bash
-cd backend
-npm install
-cp .env.example .env   # Configurer DB_PASSWORD et autres vars
-npm run dev            # Lance sur http://localhost:5000
-```
+### 3. Réglages du projet Supabase
 
-### 4. Frontend
+- **Authentication → Sign In / Providers → Email** : désactiver **Confirm email** (le plan gratuit
+  n'envoie que quelques e-mails par heure).
+- **Authentication → URL Configuration** : *Site URL* = `http://localhost:5174`
+  (à remplacer par le domaine final lors de la mise en ligne).
+
+### 4. Lancer le site
 
 ```bash
 cd frontend
+cp .env.example .env.local   # puis renseigner l'URL et la clé publique du projet
 npm install
-npm run dev            # Lance sur http://localhost:5173
+npm run dev                  # http://localhost:5174
 ```
 
-## Identifiants de démonstration
+Les deux variables attendues dans `frontend/.env.local` :
 
-| Rôle | Email | Mot de passe |
-|------|-------|-------------|
-| Admin | admin@m3alemconnect.ma | Admin@123 |
+```env
+VITE_SUPABASE_URL=https://votre-projet.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
+```
 
-> Créez vos propres comptes artisan/client via /register
+> La clé publique est faite pour être visible dans le navigateur : ce sont les règles de sécurité
+> de la base qui protègent les données. La clé secrète (`service_role`) ne doit **jamais** être utilisée ici.
 
-## Fonctionnalités MVP
+### 5. Créer le compte administrateur
 
-### Pour les clients
-- [x] Inscription / Connexion
-- [x] Recherche par métier et ville
-- [x] Filtres avancés (note, disponibilité)
-- [x] Consultation des profils artisans
-- [x] Système d'avis et notes (1-5★)
-- [x] Demandes de devis détaillées
-- [x] Tableau de bord client
+Créer un compte client sur le site, puis dans le SQL Editor :
 
-### Pour les artisans
-- [x] Inscription professionnelle
-- [x] Profil complet (bio, compétences, tarifs)
-- [x] Portfolio photos
-- [x] Réception et réponse aux devis
-- [x] Gestion de la disponibilité
-- [x] Abonnements (Gratuit / Pro / Premium)
-- [x] Tableau de bord avec statistiques
+```sql
+update public.profiles set role = 'admin'
+where id = (select id from auth.users where email = 'votre@email.com');
+```
+
+## Mode démonstration
+
+Sans clés Supabase, ou tant qu'aucun artisan n'est inscrit, le site affiche des profils de
+démonstration : la page d'accueil, la recherche et les fiches artisans restent présentables
+lors d'une présentation, sans base de données.
+
+## Fonctionnalités
+
+### Clients
+- Recherche par métier, ville, note minimale et disponibilité
+- Fiches artisans : présentation, compétences, photos de chantiers, avis
+- Demandes de devis gratuites, puis acceptation et clôture de la mission
+- Avis (réservés aux clients ayant réellement demandé un devis à l'artisan)
+
+### Artisans
+- Profil professionnel : métier, tarif, zones d'intervention, compétences
+- Boîte de réception des demandes, avec réponse chiffrée
+- Galerie de réalisations (photos hébergées par Supabase Storage)
+- Offres Gratuit / Pro / Premium (sans paiement à ce stade du concept)
 
 ### Administration
-- [x] Dashboard avec KPIs
-- [x] Gestion des utilisateurs
-- [x] Vérification des artisans
-- [x] Modération des avis
-- [x] Suivi des devis
+- Indicateurs de la plateforme
+- Gestion des comptes : vérification des artisans, activation / désactivation
+- Modération des avis et suivi des demandes de devis
 
-## Palette de couleurs
+## Sécurité
 
-| Couleur | Hex | Signification |
-|---------|-----|--------------|
-| Deep Navy | #001A33 | Confiance, stabilité, professionnalisme |
-| Moroccan Saffron | #D99000 | Énergie, identité marocaine |
-| Off-White | #F2F0E6 | Clarté, accessibilité |
-| Deep Emerald | #065F2E | Croissance, prospérité |
+Les règles vivent dans la base, pas dans le navigateur :
 
-## Structure du projet
+- un compte ne peut pas changer son propre rôle, se vérifier lui-même ni modifier ses notes ;
+- les notes et le nombre de missions sont calculés par la base ;
+- les numéros de téléphone des clients ne sont visibles que par eux-mêmes, par l'administration
+  et par l'artisan qu'ils ont contacté ;
+- un artisan ne peut répondre qu'aux demandes qui lui sont adressées ;
+- les photos ne peuvent être déposées que dans le dossier de leur propriétaire.
+
+Ces règles sont couvertes par des tests automatisés (voir l'historique du projet).
+
+## Structure
 
 ```
 m3alemconnect/
-├── backend/
-│   ├── config/database.js     # Pool MySQL
-│   ├── database/schema.sql    # Schéma + seed data
-│   ├── middleware/            # Auth JWT, Multer upload
-│   ├── routes/               # auth, artisans, reviews, quotes, subscriptions, admin
-│   └── server.js
-└── frontend/
-    ├── src/
-    │   ├── contexts/AuthContext.jsx
-    │   ├── pages/             # Home, Login, Register, Artisans, ArtisanProfile, Dashboards
-    │   ├── components/        # Navbar, Footer, ArtisanCard, StarRating, QuoteModal
-    │   └── services/api.js    # Axios instance
-    └── tailwind.config.js
+├── supabase/
+│   └── schema.sql            # tables, sécurité, fonctions, données de départ
+├── frontend/
+│   ├── src/
+│   │   ├── services/         # client Supabase + accès aux données
+│   │   ├── i18n/             # dictionnaires français / arabe
+│   │   ├── components/
+│   │   └── pages/
+│   └── .env.example
+└── backend/                  # ancienne API Express + MySQL (non utilisée)
 ```

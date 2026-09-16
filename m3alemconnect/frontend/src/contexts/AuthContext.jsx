@@ -1,65 +1,141 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import api from '../services/api';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { isSupabaseConfigured, supabase } from '../services/supabase';
+import { fetchMyProfile, signIn, signOut, signUp } from '../services/data';
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('m3alem_user')); } catch { return null; }
-  });
-  const [loading, setLoading] = useState(true);
+export class InactiveAccountError extends Error {
+  constructor() {
+    super('account_disabled');
+    this.code = 'account_disabled';
+  }
+}
 
-  const fetchMe = useCallback(async () => {
-    const token = localStorage.getItem('m3alem_token');
-    if (!token) { setLoading(false); return; }
-    try {
-      const { data } = await api.get('/auth/me');
-      setUser(data);
-      localStorage.setItem('m3alem_user', JSON.stringify(data));
-    } catch {
-      localStorage.removeItem('m3alem_token');
-      localStorage.removeItem('m3alem_user');
+export class MissingProfileError extends Error {
+  constructor() {
+    super('profile_missing');
+    this.code = 'profile_missing';
+  }
+}
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
+  const loadedUserId = useRef(null);
+
+  const applySession = useCallback(async (session) => {
+    if (!session?.user) {
+      loadedUserId.current = null;
       setUser(null);
-    } finally {
-      setLoading(false);
+      return null;
     }
+
+    const profile = await fetchMyProfile();
+    if (!profile) {
+      await signOut();
+      loadedUserId.current = null;
+      setUser(null);
+      throw new MissingProfileError();
+    }
+    if (!profile.is_active) {
+      await signOut();
+      loadedUserId.current = null;
+      setUser(null);
+      throw new InactiveAccountError();
+    }
+
+    const account = { ...profile, email: session.user.email };
+    loadedUserId.current = account.id;
+    setUser(account);
+    return account;
   }, []);
 
-  useEffect(() => { fetchMe(); }, [fetchMe]);
+  useEffect(() => {
+    if (!supabase) return undefined;
+    let active = true;
 
-  const login = async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('m3alem_token', data.token);
-    localStorage.setItem('m3alem_user', JSON.stringify(data.user));
-    setUser(data.user);
-    return data.user;
-  };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return;
 
-  const register = async (formData) => {
-    const { data } = await api.post('/auth/register', formData);
-    localStorage.setItem('m3alem_token', data.token);
-    localStorage.setItem('m3alem_user', JSON.stringify(data.user));
-    setUser(data.user);
-    return data.user;
-  };
+      if (event === 'SIGNED_OUT') {
+        loadedUserId.current = null;
+        setUser(null);
+        setLoading(false);
+        return;
+      }
 
-  const logout = () => {
-    localStorage.removeItem('m3alem_token');
-    localStorage.removeItem('m3alem_user');
-    setUser(null);
-  };
+      // Token refreshes and tab focus re-emit events for the account we already loaded.
+      if (event !== 'USER_UPDATED' && session?.user?.id && session.user.id === loadedUserId.current) {
+        setLoading(false);
+        return;
+      }
 
-  const refreshUser = fetchMe;
+      // Supabase asks that its client is not awaited inside this callback.
+      setTimeout(() => {
+        applySession(session)
+          .catch(() => {})
+          .finally(() => {
+            if (active) setLoading(false);
+          });
+      }, 0);
+    });
 
-  return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser, isAuthenticated: !!user }}>
-      {children}
-    </AuthContext.Provider>
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [applySession]);
+
+  const login = useCallback(
+    async (email, password) => {
+      const { session } = await signIn(email, password);
+      return applySession(session);
+    },
+    [applySession],
   );
+
+  const register = useCallback(
+    async (payload) => {
+      const { session } = await signUp(payload);
+      // No session means the project requires an e-mail confirmation first.
+      if (!session) return null;
+      return applySession(session);
+    },
+    [applySession],
+  );
+
+  const logout = useCallback(async () => {
+    await signOut();
+    loadedUserId.current = null;
+    setUser(null);
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    if (!supabase) return null;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return null;
+    return applySession(data.session).catch(() => null);
+  }, [applySession]);
+
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      login,
+      register,
+      logout,
+      refreshUser,
+      isAuthenticated: Boolean(user),
+      isConfigured: isSupabaseConfigured,
+    }),
+    [user, loading, login, register, logout, refreshUser],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
 };

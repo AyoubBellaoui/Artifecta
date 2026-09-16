@@ -11,7 +11,7 @@ export default function Footer() {
           <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
             <img
               src={LOGO_SRC}
-              alt="Artifecta logo"
+              alt="Logo Artifecta"
               style={{
                 width: 44,
                 height: 44,
@@ -27,15 +27,15 @@ export default function Footer() {
             className="font-body text-sm"
             style={{ color: "#a9c2d8", opacity: 0.7, maxWidth: "280px" }}
           >
-            We craft scalable digital experiences powered by design,
-            technology, and AI.
+            Nous concevons des expériences digitales évolutives, portées par le
+            design, la technologie et l’IA.
           </p>
         </div>
 
         <div className="flex flex-col gap-2 text-center md:text-left">
-          <h4 className="font-unbounded text-white text-sm mb-3">Location</h4>
+          <h4 className="font-unbounded text-white text-sm mb-3">Coordonnées</h4>
           <p className="font-body text-sm" style={{ color: "#a9c2d8", opacity: 0.7 }}>
-            Casablanca, Morocco
+            Casablanca, Maroc
           </p>
           <p className="font-body text-sm" style={{ color: "#a9c2d8", opacity: 0.7 }}>
             hello@artifecta.ma
@@ -43,7 +43,7 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col gap-2 text-center md:text-right">
-          <h4 className="font-unbounded text-white text-sm mb-3">Socials</h4>
+          <h4 className="font-unbounded text-white text-sm mb-3">Réseaux sociaux</h4>
           {socialLinks.map((link) => (
             <a
               key={link.label}
@@ -62,7 +62,7 @@ export default function Footer() {
         className="pt-8 border-t border-[rgba(169,194,216,0.1)] flex flex-col md:flex-row justify-between items-center gap-4"
       >
         <p className="font-body text-xs" style={{ color: "#a9c2d8", opacity: 0.4 }}>
-          © 2026 Artifecta. All rights reserved.
+          © 2026 Artifecta. Tous droits réservés.
         </p>
         <div className="flex gap-6 font-body text-xs">
           <a
@@ -70,14 +70,14 @@ export default function Footer() {
             className="transition-opacity hover:opacity-100"
             style={{ color: "#a9c2d8", opacity: 0.4, textDecoration: "none" }}
           >
-            Privacy Policy
+            Politique de confidentialité
           </a>
           <a
             href="#"
             className="transition-opacity hover:opacity-100"
             style={{ color: "#a9c2d8", opacity: 0.4, textDecoration: "none" }}
           >
-            Terms of Service
+            Conditions d’utilisation
           </a>
         </div>
       </div>

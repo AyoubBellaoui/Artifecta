@@ -68,7 +68,7 @@ function FeaturedCard({ project }) {
                   letterSpacing: "0.12em",
                 }}
               >
-                CONCEPT PROJECT
+                PROJET CONCEPT
               </span>
             </div>
 
@@ -125,7 +125,7 @@ function FeaturedCard({ project }) {
                 onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
                 onMouseLeave={e => e.currentTarget.style.opacity = "1"}
               >
-                View Concept Site
+                Voir le site concept
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M2 7h10M7 2l5 5-5 5" stroke="#142638" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -235,7 +235,7 @@ export default function WorkSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.65, delay: 0.1 }}
           >
-            Our Work
+            Nos réalisations
           </motion.h2>
         </div>
 

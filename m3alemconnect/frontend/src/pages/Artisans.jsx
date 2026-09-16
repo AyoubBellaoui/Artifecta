@@ -1,187 +1,363 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import api from '../services/api';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { fetchCategories, searchArtisans } from '../services/data';
+import { useI18n } from '../i18n/I18nProvider';
 import ArtisanCard from '../components/ArtisanCard';
-import { MOCK_ARTISANS, MOCK_CATEGORIES } from '../data/mockData';
+import Icon, { CategoryIcon } from '../components/Icon';
+import ZelligePattern from '../components/ZelligePattern';
+import { EmptyState, Notice } from '../components/ui';
+import { CITIES, FALLBACK_CATEGORIES, filterDemoArtisans } from '../data/mockData';
 
-const CITIES = ['Casablanca','Rabat','Marrakech','Fès','Agadir','Tanger','Meknès','Oujda','Tétouan','Salé'];
+const PAGE_SIZE = 12;
+
 const SORT_OPTIONS = [
-  { value: 'rating', label: 'Mieux notés' },
-  { value: 'jobs', label: 'Plus expérimentés' },
-  { value: 'premium', label: 'Premium d\'abord' },
-  { value: 'newest', label: 'Les plus récents' },
+  ['rating', 'artisans.sortRating'],
+  ['jobs', 'artisans.sortJobs'],
+  ['premium', 'artisans.sortPremium'],
+  ['newest', 'artisans.sortNewest'],
 ];
 
+const RATING_OPTIONS = [
+  ['', 'artisans.anyRating'],
+  ['4', 'artisans.rating4'],
+  ['4.5', 'artisans.rating45'],
+  ['5', 'artisans.rating5'],
+];
+
+const POPULAR_CATEGORIES = ['plomberie', 'electricite', 'peinture', 'nettoyage'];
+
+function FilterOption({ active, onClick, label, icon }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-sm transition-colors ${
+        active ? 'bg-navy-50 font-medium text-navy-900' : 'text-sand-700 hover:bg-sand-100 hover:text-navy-900'
+      }`}
+    >
+      {icon && <span className={active ? 'text-navy-700' : 'text-sand-500'}>{icon}</span>}
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}
+
+function ResultsSkeleton() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-hidden="true">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="card p-5">
+          <div className="flex gap-3.5">
+            <div className="skeleton h-12 w-12" />
+            <div className="flex-1 space-y-2 pt-1">
+              <div className="skeleton h-3.5 w-2/3" />
+              <div className="skeleton h-3 w-1/2" />
+            </div>
+          </div>
+          <div className="skeleton mt-5 h-3 w-1/3" />
+          <div className="mt-5 grid grid-cols-3 gap-3 border-t border-sand-200 pt-4">
+            <div className="skeleton h-8" />
+            <div className="skeleton h-8" />
+            <div className="skeleton h-8" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Artisans() {
+  const { t, categoryName, cityName } = useI18n();
   const [params, setParams] = useSearchParams();
-  const [artisans, setArtisans] = useState(MOCK_ARTISANS);
-  const [categories, setCategories] = useState(MOCK_CATEGORIES);
+  const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
+  const [result, setResult] = useState({ artisans: [], total: 0, pages: 1, demo: false });
   const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [pages, setPages] = useState(1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const demoMode = useRef(false);
 
   const search = params.get('search') || '';
   const city = params.get('city') || '';
   const category = params.get('category') || '';
   const sort = params.get('sort') || 'rating';
-  const page = parseInt(params.get('page') || '1');
   const available = params.get('available') || '';
   const minRating = params.get('min_rating') || '';
+  const page = Math.max(1, Number.parseInt(params.get('page') || '1', 10) || 1);
+  const [query, setQuery] = useState(search);
 
-  const setParam = (key, value) => {
-    const next = new URLSearchParams(params);
-    if (value) next.set(key, value); else next.delete(key);
-    next.delete('page');
-    setParams(next);
-  };
+  const updateParams = useCallback(
+    (changes) => {
+      setParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          Object.entries(changes).forEach(([key, value]) => (value ? next.set(key, value) : next.delete(key)));
+          if (!Object.prototype.hasOwnProperty.call(changes, 'page')) next.delete('page');
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setParams],
+  );
+
+  // Keep the input in sync when the URL changes elsewhere (back button, footer links).
+  useEffect(() => {
+    setQuery((current) => (current.trim() === search ? current : search));
+  }, [search]);
 
   useEffect(() => {
-    api.get('/categories').then(r => { if (r.data?.length) setCategories(r.data); }).catch(() => {});
+    if (query.trim() === search) return undefined;
+    const timer = setTimeout(() => updateParams({ search: query.trim() }), 350);
+    return () => clearTimeout(timer);
+  }, [query, search, updateParams]);
+
+  useEffect(() => {
+    fetchCategories().then((rows) => { if (rows?.length) setCategories(rows); }).catch(() => {});
   }, []);
 
-  const fetchArtisans = useCallback(async () => {
+  useEffect(() => {
+    let cancelled = false;
+    const filters = { search, city, category, minRating, available, sort };
+    const hasFilters = Boolean(search || city || category || minRating || available);
+    const showDemo = () => {
+      demoMode.current = true;
+      const artisans = filterDemoArtisans(filters);
+      setResult({ artisans, total: artisans.length, pages: 1, demo: true });
+    };
+
     setLoading(true);
-    try {
-      const { data } = await api.get('/artisans', {
-        params: { search, city, category, sort, page, available: available || undefined, min_rating: minRating || undefined, limit: 12 }
+    searchArtisans({ ...filters, page, limit: PAGE_SIZE })
+      .then((data) => {
+        if (cancelled) return;
+        // A platform with no artisans yet is presented with the demo profiles.
+        if (!data.total && (!hasFilters || demoMode.current)) {
+          showDemo();
+        } else {
+          demoMode.current = false;
+          setResult({ ...data, demo: false });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) showDemo();
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
-      setArtisans(data.artisans?.length ? data.artisans : MOCK_ARTISANS);
-      setTotal(data.total || MOCK_ARTISANS.length);
-      setPages(data.pages || 1);
-    } catch {
-      setArtisans(MOCK_ARTISANS);
-      setTotal(MOCK_ARTISANS.length);
-    } finally {
-      setLoading(false);
-    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [search, city, category, sort, page, available, minRating]);
 
-  useEffect(() => { fetchArtisans(); }, [fetchArtisans]);
+  const activeFilters = [category, city, available, minRating].filter(Boolean).length;
+  const resetFilters = () => {
+    setQuery('');
+    updateParams({ search: '', category: '', city: '', available: '', min_rating: '' });
+  };
+  const goToPage = (nextPage) => {
+    updateParams({ page: nextPage > 1 ? String(nextPage) : '' });
+    window.scrollTo({ top: 0 });
+  };
 
   return (
-    <div className="pt-16 min-h-screen bg-cream">
-      {/* Header bar */}
-      <div className="gradient-navy relative overflow-hidden py-12">
-        <div className="absolute inset-0 dot-pattern opacity-30" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-          <h1 className="font-display font-bold text-white text-3xl md:text-4xl mb-2">Trouver un artisan</h1>
-          <p className="text-white/50 text-sm mb-6">{total} professionnels disponibles sur M3alemConnect</p>
-          <div className="flex flex-col sm:flex-row gap-3 max-w-2xl">
-            <div className="flex-1 flex items-center bg-white/10 border border-white/20 rounded-xl px-4 gap-2 focus-within:bg-white focus-within:border-saffron transition-all group">
-              <span className="text-white/50 group-focus-within:text-gray-400">🔍</span>
+    <>
+      {/* Search header, in the same navy band as the home page hero */}
+      <div className="relative overflow-hidden bg-navy-900">
+        <ZelligePattern className="text-white/[0.07] [mask-image:linear-gradient(to_left,#000_10%,transparent_70%)] rtl:[mask-image:linear-gradient(to_right,#000_10%,transparent_70%)]" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-saffron-500" aria-hidden="true" />
+
+        <div className="container-page relative py-10 sm:py-12">
+          <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-[32px]">{t('artisans.title')}</h1>
+          <p className="mt-2 max-w-xl text-navy-100">{t('artisans.subtitle')}</p>
+
+          <div className="mt-7 grid gap-3 rounded-xl bg-white p-3 shadow-pop sm:grid-cols-[minmax(0,1fr)_15rem]">
+            <div className="relative">
+              <label htmlFor="artisan-search" className="sr-only">{t('artisans.searchLabel')}</label>
+              <Icon name="search" className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-sand-500" />
               <input
-                value={search}
-                onChange={e => setParam('search', e.target.value)}
-                placeholder="Nom, métier, compétence..."
-                className="flex-1 py-3 text-white placeholder:text-white/40 focus:text-navy focus:outline-none bg-transparent text-sm"
+                id="artisan-search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t('artisans.searchPlaceholder')}
+                className="input h-12 ps-10 text-[15px]"
               />
             </div>
-            <select value={city} onChange={e => setParam('city', e.target.value)}
-              className="sm:w-48 px-4 py-3 bg-white/10 border border-white/20 text-white rounded-xl text-sm focus:outline-none focus:bg-white focus:text-navy transition-all">
-              <option value="" className="text-navy">📍 Toutes les villes</option>
-              {CITIES.map(c => <option key={c} value={c} className="text-navy">{c}</option>)}
-            </select>
+            <div>
+              <label htmlFor="artisan-city" className="sr-only">{t('artisans.city')}</label>
+              <select id="artisan-city" value={city} onChange={(e) => updateParams({ city: e.target.value })} className="select h-12 text-[15px]">
+                <option value="">{t('artisans.allCities')}</option>
+                {CITIES.map((c) => (
+                  <option key={c} value={c}>{cityName(c)}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
+            <span className="me-1 text-navy-200">{t('home.hero.popular')}</span>
+            {POPULAR_CATEGORIES.map((slug) => (
+              <button
+                key={slug}
+                type="button"
+                onClick={() => updateParams({ category: category === slug ? '' : slug })}
+                aria-pressed={category === slug}
+                className={`rounded-full border px-3 py-1 transition-colors ${
+                  category === slug
+                    ? 'border-saffron-400 bg-saffron-500 font-medium text-navy-950'
+                    : 'border-white/20 text-navy-50 hover:border-saffron-400 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                {categoryName(slug)}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Filters sidebar */}
-          <aside className="w-full lg:w-56 flex-shrink-0">
-            <div className="bg-white rounded-2xl p-5 shadow-sm sticky top-24">
-              <h3 className="font-display font-bold text-navy mb-4">Filtres</h3>
-
-              <div className="mb-5">
-                <label className="label">Catégorie</label>
-                <div className="space-y-1.5">
-                  <button onClick={() => setParam('category', '')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${!category ? 'bg-navy text-white' : 'text-gray-600 hover:bg-cream'}`}>
-                    Toutes
+      <div className="container-page py-8">
+        <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">
+          <aside className={`${filtersOpen ? 'block' : 'hidden'} mb-6 lg:mb-0 lg:block`}>
+            <div className="card p-5 lg:sticky lg:top-24">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold text-navy-900">{t('artisans.filters')}</h2>
+                {(activeFilters > 0 || search) && (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="text-xs font-medium text-navy-700 underline decoration-sand-300 underline-offset-4 hover:text-navy-900"
+                  >
+                    {t('artisans.reset')}
                   </button>
-                  {categories.map(c => (
-                    <button key={c.id} onClick={() => setParam('category', c.slug)} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${category === c.slug ? 'bg-navy text-white' : 'text-gray-600 hover:bg-cream'}`}>
-                      <span>{c.icon}</span> {c.name_fr}
-                    </button>
-                  ))}
-                </div>
+                )}
               </div>
 
-              <div className="mb-5 border-t border-gray-100 pt-4">
-                <label className="label">Note minimum</label>
-                <select value={minRating} onChange={e => setParam('min_rating', e.target.value)} className="input-field text-sm py-2">
-                  <option value="">Toutes les notes</option>
-                  <option value="4">4★ et plus</option>
-                  <option value="4.5">4.5★ et plus</option>
-                  <option value="5">5★ seulement</option>
+              <fieldset className="mt-5">
+                <legend className="text-xs font-semibold uppercase tracking-[0.06em] text-sand-600">{t('artisans.category')}</legend>
+                <ul className="mt-2 space-y-0.5">
+                  <li>
+                    <FilterOption active={!category} onClick={() => updateParams({ category: '' })} label={t('artisans.allCategories')} />
+                  </li>
+                  {categories.map((c) => (
+                    <li key={c.slug}>
+                      <FilterOption
+                        active={category === c.slug}
+                        onClick={() => updateParams({ category: c.slug })}
+                        label={categoryName(c)}
+                        icon={<CategoryIcon slug={c.slug} className="h-4 w-4" />}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </fieldset>
+
+              <div className="mt-5 border-t border-sand-200 pt-5">
+                <label htmlFor="min-rating" className="text-xs font-semibold uppercase tracking-[0.06em] text-sand-600">
+                  {t('artisans.minRating')}
+                </label>
+                <select id="min-rating" value={minRating} onChange={(e) => updateParams({ min_rating: e.target.value })} className="select mt-2 h-10">
+                  {RATING_OPTIONS.map(([value, key]) => (
+                    <option key={key} value={value}>{t(key)}</option>
+                  ))}
                 </select>
               </div>
 
-              <div className="border-t border-gray-100 pt-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={available === 'true'} onChange={e => setParam('available', e.target.checked ? 'true' : '')} className="accent-saffron w-4 h-4" />
-                  <span className="text-sm text-gray-700">Disponibles seulement</span>
+              <div className="mt-5 border-t border-sand-200 pt-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.06em] text-sand-600">{t('artisans.availability')}</p>
+                <label className="mt-2.5 flex cursor-pointer items-center gap-2.5 text-sm text-navy-900">
+                  <input
+                    type="checkbox"
+                    className="checkbox"
+                    checked={available === 'true'}
+                    onChange={(e) => updateParams({ available: e.target.checked ? 'true' : '' })}
+                  />
+                  {t('artisans.availableOnly')}
                 </label>
+              </div>
+
+              <div className="mt-5 border-t border-sand-200 pt-5">
+                <p className="text-sm font-medium text-navy-900">{t('home.pro.eyebrow')}</p>
+                <p className="mt-1 text-xs leading-relaxed text-sand-600">{t('artisans.proTeaser')}</p>
+                <Link to="/register?role=artisan" className="btn btn-secondary btn-sm mt-3 w-full">
+                  {t('nav.becomeArtisan')}
+                </Link>
               </div>
             </div>
           </aside>
 
-          {/* Results */}
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-5">
-              <p className="text-gray-600 text-sm">
-                {loading ? 'Recherche...' : `${total} artisan${total > 1 ? 's' : ''} trouvé${total > 1 ? 's' : ''}`}
+          <div>
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm font-medium text-navy-900" aria-live="polite">
+                {loading && result.artisans.length === 0 ? t('artisans.searching') : t('artisans.results', { count: result.total })}
               </p>
-              <select value={sort} onChange={e => setParam('sort', e.target.value)} className="input-field w-auto text-sm py-2 bg-white">
-                {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen((open) => !open)}
+                  aria-expanded={filtersOpen}
+                  className="btn btn-secondary btn-sm lg:hidden"
+                >
+                  <Icon name="sliders" className="h-4 w-4" />
+                  {t('artisans.filters')}
+                  {activeFilters > 0 && <span className="rounded bg-navy px-1.5 text-xs text-white">{activeFilters}</span>}
+                </button>
+                <label htmlFor="artisan-sort" className="hidden text-sm text-sand-600 sm:inline">{t('artisans.sort')}</label>
+                <select
+                  id="artisan-sort"
+                  value={sort}
+                  onChange={(e) => updateParams({ sort: e.target.value === 'rating' ? '' : e.target.value })}
+                  className="select h-9 w-auto min-w-[10.5rem]"
+                >
+                  {SORT_OPTIONS.map(([value, key]) => (
+                    <option key={value} value={value}>{t(key)}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
-                    <div className="h-20 bg-gray-100" />
-                    <div className="p-5 space-y-3">
-                      <div className="flex gap-3">
-                        <div className="w-16 h-16 rounded-2xl bg-gray-200 -mt-10" />
-                        <div className="flex-1 space-y-2 pt-2">
-                          <div className="h-3 bg-gray-200 rounded-full w-3/4" />
-                          <div className="h-2.5 bg-gray-100 rounded-full w-1/2" />
-                        </div>
-                      </div>
-                      <div className="h-2.5 bg-gray-100 rounded-full w-2/3" />
-                      <div className="h-9 bg-gray-100 rounded-xl mt-4" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : artisans.length === 0 ? (
-              <div className="text-center py-20">
-                <div className="text-6xl mb-4">🔍</div>
-                <h3 className="font-display font-bold text-navy text-xl mb-2">Aucun artisan trouvé</h3>
-                <p className="text-gray-500">Essayez de modifier vos filtres de recherche</p>
-              </div>
+            {result.demo && <Notice className="mb-5">{t('artisans.demoNotice')}</Notice>}
+
+            {loading && result.artisans.length === 0 ? (
+              <ResultsSkeleton />
+            ) : result.artisans.length === 0 ? (
+              <EmptyState
+                icon="search"
+                title={t('artisans.emptyTitle')}
+                text={t('artisans.emptyText')}
+                action={
+                  activeFilters > 0 || search ? (
+                    <button type="button" onClick={resetFilters} className="btn btn-secondary">{t('artisans.reset')}</button>
+                  ) : null
+                }
+              />
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {artisans.map((a, i) => <ArtisanCard key={a.id} artisan={a} index={i} />)}
+                <div
+                  className={`grid gap-4 transition-opacity sm:grid-cols-2 xl:grid-cols-3 ${loading ? 'opacity-60' : ''}`}
+                  aria-busy={loading}
+                >
+                  {result.artisans.map((artisan) => (
+                    <ArtisanCard key={artisan.id} artisan={artisan} />
+                  ))}
                 </div>
 
-                {pages > 1 && (
-                  <div className="flex justify-center items-center gap-2 mt-8">
-                    {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
-                      <button key={p} onClick={() => { const n = new URLSearchParams(params); n.set('page', p); setParams(n); }} className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${page === p ? 'bg-navy text-white' : 'bg-white text-navy hover:bg-cream'}`}>
-                        {p}
-                      </button>
-                    ))}
-                  </div>
+                {result.pages > 1 && (
+                  <nav className="mt-8 flex items-center justify-between gap-3 border-t border-sand-200 pt-5">
+                    <button type="button" disabled={page <= 1} onClick={() => goToPage(page - 1)} className="btn btn-secondary btn-sm">
+                      <Icon name="arrowLeft" className="h-4 w-4" flipInRtl />
+                      {t('artisans.previous')}
+                    </button>
+                    <span className="text-sm text-sand-600">{t('artisans.pageOf', { page, pages: result.pages })}</span>
+                    <button type="button" disabled={page >= result.pages} onClick={() => goToPage(page + 1)} className="btn btn-secondary btn-sm">
+                      {t('artisans.next')}
+                      <Icon name="arrowRight" className="h-4 w-4" flipInRtl />
+                    </button>
+                  </nav>
                 )}
               </>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

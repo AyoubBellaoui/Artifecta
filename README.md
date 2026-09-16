@@ -120,71 +120,42 @@ Artifecta/
 
 ## Sub-project: M3alemConnect
 
-`m3alemconnect/` is a separate full-stack Moroccan artisan marketplace. It has its own frontend, backend, and database — completely independent from the Artifecta site.
+`m3alemconnect/` is a separate Moroccan artisan marketplace, bilingual French / Arabic. It runs on Supabase, so there is no local database and no API server to start.
 
-| Layer | Tech | Port |
-|-------|------|------|
-| Frontend | React 18 + Vite + Tailwind CSS | 5173 |
-| Backend | Node.js + Express | 5000 |
-| Database | MySQL | 3306 |
-
-### What you need first — MySQL
-
-The easiest way is **XAMPP**:
-1. Download from [apachefriends.org](https://www.apachefriends.org) and install
-2. Open the XAMPP Control Panel
-3. Click **Start** next to **MySQL**
-
-> If you already have MySQL installed, just make sure it's running.
+| Layer | Tech | Where |
+|-------|------|-------|
+| Frontend | React 18 + Vite + Tailwind CSS | `localhost:5174` |
+| Database, accounts, photo storage | Supabase (PostgreSQL) | hosted |
 
 ### 1. Create the database
 
+In the Supabase dashboard: **SQL Editor → New query**, paste the contents of
+`m3alemconnect/supabase/schema.sql` and click **Run**. It creates the tables, the security rules,
+the photo storage and the starter data, and it can be run again safely.
+
+### 2. Supabase settings
+
+- **Authentication → Sign In / Providers → Email**: turn **Confirm email** off (the free plan only
+  sends a few e-mails per hour).
+- **Authentication → URL Configuration**: set *Site URL* to `http://localhost:5174`, and replace it
+  with the real domain once the site is hosted.
+
+### 3. Add the project keys
+
 ```bash
-cd m3alemconnect/backend
-node database/setup.js
+cd m3alemconnect/frontend
+copy .env.example .env.local
 ```
-
-This creates the `m3alemconnect` database and seeds it with starter data (categories, admin account, sample artisans).
-
-### 2. Configure the backend
-
-```bash
-cd m3alemconnect/backend
-copy .env.example .env
-```
-
-Open `m3alemconnect/backend/.env` and fill in:
 
 ```env
-PORT=5000
-FRONTEND_URL=http://localhost:5173
-
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=          # leave blank if using XAMPP (no password by default)
-DB_NAME=m3alemconnect
-
-JWT_SECRET=anyrandomstringyouwant123   # make something up, keep it private
-JWT_EXPIRES_IN=7d
-
-UPLOAD_DIR=uploads
-MAX_FILE_SIZE=5242880
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 ```
 
-### 3. Start the backend
+Both values come from **Project Settings → Data API / API Keys**. The publishable key is meant to be
+public: the database rules protect the data. The `service_role` secret key must never be used here.
 
-```bash
-cd m3alemconnect/backend
-npm install
-npm run dev
-```
-
-You should see: `Server running on port 5000`
-
-### 4. Start the frontend
-
-Open a **new terminal**:
+### 4. Start the site
 
 ```bash
 cd m3alemconnect/frontend
@@ -192,23 +163,21 @@ npm install
 npm run dev
 ```
 
-Open → `http://localhost:5173`
+Open → `http://localhost:5174`
 
-### Demo login
+### Admin account
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@m3alemconnect.ma | Admin@123 |
+Sign up on the site, then run in the SQL Editor:
 
-> Create your own artisan/client accounts via `/register`
+```sql
+update public.profiles set role = 'admin'
+where id = (select id from auth.users where email = 'your@email.com');
+```
 
-### Terminals summary
-
-| Terminal | Command | Result |
-|----------|---------|--------|
-| 1 | XAMPP → Start MySQL | Database on port 3306 |
-| 2 | `cd m3alemconnect/backend && npm run dev` | API on port 5000 |
-| 3 | `cd m3alemconnect/frontend && npm run dev` | App on port 5173 |
+> Without Supabase keys, or while no artisan has signed up yet, the site shows demo profiles so it
+> stays presentable.
+>
+> `m3alemconnect/backend/` still contains the old Express + MySQL API. It is no longer used.
 
 ---
 

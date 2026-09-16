@@ -1,0 +1,36 @@
+import { useI18n } from '../i18n/I18nProvider';
+import { planKey, planName } from '../i18n/helpers';
+import Icon from './Icon';
+
+export default function PlanCard({ plan, highlighted = false, action }) {
+  const { t, tm, formatNumber } = useI18n();
+  const key = planKey(plan);
+  const description = key ? t(`plans.${key}.description`) : '';
+  const features = (key && tm(`plans.${key}.features`)) || plan.features || [];
+
+  return (
+    <div className={`flex flex-col rounded-lg border bg-white p-6 ${highlighted ? 'border-navy shadow-raised ring-1 ring-navy' : 'border-sand-200'}`}>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-lg font-semibold text-navy-900">{planName(plan, t)}</h3>
+        {highlighted && <span className="chip bg-navy text-white">{t('home.plans.recommended')}</span>}
+      </div>
+      {description && <p className="mt-1.5 text-sm text-sand-600">{description}</p>}
+
+      <p className="mt-6 flex items-baseline gap-1.5">
+        <span className="text-4xl font-semibold tracking-tight text-navy-900">{formatNumber(plan.price)}</span>
+        <span className="text-sm text-sand-600">{t('quote.currency')} {t('home.plans.perMonth')}</span>
+      </p>
+
+      <ul className="mt-6 flex-1 space-y-3 border-t border-sand-200 pt-6">
+        {features.map((feature) => (
+          <li key={feature} className="flex gap-2.5 text-sm text-sand-700">
+            <Icon name="check" className="mt-0.5 h-4 w-4 text-emerald-600" strokeWidth={2.25} />
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+
+      {action && <div className="mt-8">{action}</div>}
+    </div>
+  );
+}

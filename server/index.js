@@ -57,10 +57,10 @@ function sendJson(response, statusCode, payload) {
 function validateSubmission(body) {
   const errors = [];
 
-  if (!body.name?.trim()) errors.push("Name is required.");
-  if (!body.email?.trim()) errors.push("Email is required.");
-  if (!body.projectType?.trim()) errors.push("Project type is required.");
-  if (!body.message?.trim()) errors.push("Message is required.");
+  if (!body.name?.trim()) errors.push("Le nom est requis.");
+  if (!body.email?.trim()) errors.push("L’adresse e-mail est requise.");
+  if (!body.projectType?.trim()) errors.push("Le type de projet est requis.");
+  if (!body.message?.trim()) errors.push("Le message est requis.");
 
   return errors;
 }
@@ -92,29 +92,29 @@ async function sendContactEmail(submission) {
 
   if (!apiKey || !to || !from) {
     throw new Error(
-      "Email is not configured yet. Add RESEND_API_KEY, CONTACT_TO_EMAIL, and CONTACT_FROM_EMAIL in server/.env.",
+      "L’envoi d’e-mails n’est pas encore configuré. Ajoutez RESEND_API_KEY, CONTACT_TO_EMAIL et CONTACT_FROM_EMAIL dans server/.env.",
     );
   }
 
   const html = `
-    <h2>New contact submission</h2>
-    <p><strong>Name:</strong> ${submission.name}</p>
-    <p><strong>Email:</strong> ${submission.email}</p>
-    <p><strong>Project type:</strong> ${submission.projectType}</p>
-    <p><strong>Message:</strong></p>
+    <h2>Nouveau message via le formulaire de contact</h2>
+    <p><strong>Nom :</strong> ${submission.name}</p>
+    <p><strong>E-mail :</strong> ${submission.email}</p>
+    <p><strong>Type de projet :</strong> ${submission.projectType}</p>
+    <p><strong>Message :</strong></p>
     <p>${submission.message.replace(/\n/g, "<br />")}</p>
     <hr />
-    <p><strong>Received at:</strong> ${submission.createdAt}</p>
+    <p><strong>Reçu le :</strong> ${submission.createdAt}</p>
   `;
 
   const text = [
-    "New contact submission",
-    `Name: ${submission.name}`,
-    `Email: ${submission.email}`,
-    `Project type: ${submission.projectType}`,
-    "Message:",
+    "Nouveau message via le formulaire de contact",
+    `Nom : ${submission.name}`,
+    `E-mail : ${submission.email}`,
+    `Type de projet : ${submission.projectType}`,
+    "Message :",
     submission.message,
-    `Received at: ${submission.createdAt}`,
+    `Reçu le : ${submission.createdAt}`,
   ].join("\n");
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -126,7 +126,7 @@ async function sendContactEmail(submission) {
     body: JSON.stringify({
       from,
       to: [to],
-      subject: `New contact form message from ${submission.name}`,
+      subject: `Nouveau message de ${submission.name} via le site`,
       html,
       text,
       reply_to: submission.email,
@@ -136,7 +136,7 @@ async function sendContactEmail(submission) {
   const payload = await response.json();
 
   if (!response.ok) {
-    throw new Error(payload.message || payload.error || "Email sending failed.");
+    throw new Error(payload.message || payload.error || "Échec de l’envoi de l’e-mail.");
   }
 
   return payload;
@@ -178,14 +178,13 @@ const server = createServer(async (request, response) => {
         await sendContactEmail(submission);
 
         sendJson(response, 200, {
-          message: "Thanks, your message has been sent.",
+          message: "Merci, votre message a bien été envoyé.",
         });
       } catch (error) {
+        // Keep internal details (e.g. missing email config) in the server log, not on the site.
+        console.error("Contact submission failed:", error);
         sendJson(response, 500, {
-          error:
-            error instanceof Error
-              ? error.message
-              : "Something went wrong while sending your message.",
+          error: "Une erreur est survenue lors de l’envoi de votre message. Veuillez réessayer.",
         });
       }
     });
@@ -193,7 +192,7 @@ const server = createServer(async (request, response) => {
     return;
   }
 
-  sendJson(response, 404, { error: "Not found." });
+  sendJson(response, 404, { error: "Ressource introuvable." });
 });
 
 await loadEnvFile();

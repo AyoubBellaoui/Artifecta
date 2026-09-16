@@ -29,7 +29,7 @@ router.post('/', authenticate, requireRole('client'), [
 // GET /api/quotes/mine — client sees their sent quotes
 router.get('/mine', authenticate, requireRole('client'), async (req, res) => {
   const [rows] = await db.query(`
-    SELECT qr.*, u.first_name, u.last_name, u.avatar_url, c.name_fr as category_name, c.icon
+    SELECT qr.*, u.id as artisan_user_id, u.first_name, u.last_name, u.avatar_url, c.name_fr as category_name, c.slug as category_slug, c.icon
     FROM quote_requests qr
     JOIN artisan_profiles ap ON ap.id = qr.artisan_id
     JOIN users u ON u.id = ap.user_id

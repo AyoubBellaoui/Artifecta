@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import { teamMembers } from "../../constants/site";
 
 const highlights = [
-  { value: "20+", label: "Projects Delivered" },
-  { value: "3", label: "Core Specialists" },
-  { value: "100%", label: "Client Satisfaction" },
+  { value: "20+", label: "Projets livrés" },
+  { value: "3", label: "Experts clés" },
+  { value: "100%", label: "Clients satisfaits" },
 ];
 
 export default function AboutSection() {
@@ -28,7 +28,7 @@ export default function AboutSection() {
             className="font-unbounded font-medium tracking-widest uppercase"
             style={{ fontSize: "0.7rem", color: "#142638", opacity: 0.5 }}
           >
-            About Us
+            À propos
           </span>
         </motion.div>
 
@@ -46,9 +46,10 @@ export default function AboutSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.75, delay: 0.1 }}
         >
-          We are{" "}
-          <span className="text-outlined-lg">Artifecta</span> — a digital agency
-          built on design excellence, engineering precision, and strategic growth.
+          Nous sommes{" "}
+          <span className="text-outlined-lg">Artifecta</span> — une agence digitale
+          fondée sur l’excellence du design, la précision de l’ingénierie et la
+          croissance stratégique.
         </motion.h2>
 
         <div className="flex flex-wrap gap-12">
@@ -68,9 +69,10 @@ export default function AboutSection() {
                 lineHeight: 1.8,
               }}
             >
-              Based in Casablanca, Morocco, we blend creativity with technology to
-              build digital products that stand out. From brand identity to full-stack
-              development and AI integration — we cover the full digital spectrum.
+              Basés à Casablanca, au Maroc, nous allions créativité et technologie
+              pour concevoir des produits digitaux qui se démarquent. De l’identité
+              de marque au développement full-stack, en passant par l’intégration de
+              l’IA — nous couvrons l’ensemble du spectre digital.
             </p>
             <p
               className="font-body"
@@ -81,9 +83,10 @@ export default function AboutSection() {
                 lineHeight: 1.8,
               }}
             >
-              Our lean team of three delivers agency-quality results with the agility
-              and personal attention of a boutique studio. Every project is treated as
-              a craft, not just a deliverable.
+              Notre équipe resserrée de trois experts offre des résultats dignes
+              d’une grande agence, avec l’agilité et l’attention personnalisée d’un
+              studio à taille humaine. Chaque projet est traité comme un travail
+              d’artisan, pas comme un simple livrable.
             </p>
           </motion.div>
 
@@ -134,7 +137,7 @@ export default function AboutSection() {
             className="font-unbounded font-medium tracking-widest uppercase"
             style={{ fontSize: "0.7rem", color: "#142638", opacity: 0.5 }}
           >
-            The Team
+            L’équipe
           </span>
         </motion.div>
 

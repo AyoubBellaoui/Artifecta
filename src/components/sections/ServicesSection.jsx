@@ -3,39 +3,39 @@ import { motion } from "framer-motion";
 const services = [
   {
     number: "01",
-    title: "Brand Identity",
+    title: "Identité de marque",
     description:
-      "Distinctive visual identities — logos, typography, and color systems — that make your brand instantly recognizable and unforgettable.",
+      "Des identités visuelles distinctives — logos, typographies et palettes de couleurs — qui rendent votre marque immédiatement reconnaissable et inoubliable.",
   },
   {
     number: "02",
-    title: "UI/UX Design",
+    title: "Design UI/UX",
     description:
-      "Intuitive interfaces and seamless user journeys crafted to maximize engagement, usability, and conversion across every touchpoint.",
+      "Des interfaces intuitives et des parcours utilisateurs fluides, pensés pour maximiser l’engagement, l’ergonomie et la conversion à chaque point de contact.",
   },
   {
     number: "03",
-    title: "Web Design",
+    title: "Web design",
     description:
-      "Modern, responsive, and visually compelling websites that reflect your brand values and turn visitors into customers.",
+      "Des sites modernes, responsives et visuellement percutants, qui reflètent les valeurs de votre marque et transforment vos visiteurs en clients.",
   },
   {
     number: "04",
-    title: "Web Development",
+    title: "Développement web",
     description:
-      "Fast, scalable, and secure web applications built with cutting-edge technologies and engineering best practices.",
+      "Des applications web rapides, évolutives et sécurisées, construites avec des technologies de pointe et les meilleures pratiques d’ingénierie.",
   },
   {
     number: "05",
-    title: "AI Integration",
+    title: "Intégration IA",
     description:
-      "Smart automation, chatbots, and AI-powered features that enhance your digital product and cut operational overhead.",
+      "Automatisation intelligente, chatbots et fonctionnalités propulsées par l’IA pour enrichir votre produit digital et réduire vos coûts opérationnels.",
   },
   {
     number: "06",
-    title: "Digital Products",
+    title: "Produits digitaux",
     description:
-      "End-to-end product development — from concept and strategy to design, development, launch, and continuous iteration.",
+      "Un accompagnement de bout en bout — de la stratégie et du concept au design, au développement, au lancement et à l’amélioration continue.",
   },
 ];
 
@@ -63,7 +63,7 @@ export default function ServicesSection() {
               className="font-unbounded font-medium tracking-widest uppercase"
               style={{ fontSize: "0.7rem", color: "#a9c2d8", opacity: 0.5 }}
             >
-              What We Do
+              Nos expertises
             </span>
           </motion.div>
 
@@ -74,21 +74,21 @@ export default function ServicesSection() {
               color: "#ffffff",
               lineHeight: 1.1,
               letterSpacing: "-0.025em",
-              maxWidth: "680px",
+              maxWidth: "760px",
             }}
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.75, delay: 0.1 }}
           >
-            Services{" "}
+            Des services{" "}
             <span
               className="font-style-script"
               style={{ fontSize: "1.1em", color: "#a9c2d8", fontWeight: 400 }}
             >
-              tailored
+              sur mesure
             </span>{" "}
-            for your vision.
+            pour votre vision.
           </motion.h2>
         </div>
 

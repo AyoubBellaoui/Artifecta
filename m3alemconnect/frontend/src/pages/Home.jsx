@@ -1,532 +1,429 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import api from '../services/api';
+import { fetchCategories, fetchPlans, searchArtisans } from '../services/data';
+import { useI18n } from '../i18n/I18nProvider';
+import { planKey } from '../i18n/helpers';
 import ArtisanCard from '../components/ArtisanCard';
-import { MOCK_CATEGORIES, MOCK_ARTISANS, MOCK_TESTIMONIALS, MOROCCAN_CITIES, TRUST_FEATURES } from '../data/mockData';
+import Avatar from '../components/Avatar';
+import Icon, { CategoryIcon } from '../components/Icon';
+import PlanCard from '../components/PlanCard';
+import StarRating from '../components/StarRating';
+import { SectionHeading } from '../components/ui';
+import ZelligePattern from '../components/ZelligePattern';
+import { CITIES, CITY_STATS, FALLBACK_CATEGORIES, FALLBACK_PLANS, filterDemoArtisans } from '../data/mockData';
 
-const CITIES = ['Casablanca','Rabat','Marrakech','Fès','Agadir','Tanger','Meknès','Oujda','Tétouan','Salé'];
+const TRUST_ICONS = ['shieldCheck', 'star', 'file', 'mapPin'];
+const POPULAR_CATEGORIES = ['plomberie', 'electricite', 'peinture', 'nettoyage'];
+const DEMO_FEATURED = filterDemoArtisans({ sort: 'rating' }).slice(0, 6);
 
-const STATS = [
-  { value: '2 000+', label: 'Artisans vérifiés', icon: '🔧' },
-  { value: '15 000+', label: 'Clients satisfaits', icon: '😊' },
-  { value: '12', label: 'Villes couvertes', icon: '📍' },
-  { value: '4.8★', label: 'Note moyenne', icon: '⭐' },
-];
+function ArrowLink({ to, children, className = 'btn btn-secondary' }) {
+  return (
+    <Link to={to} className={className}>
+      {children}
+      <Icon name="arrowRight" className="h-4 w-4" flipInRtl />
+    </Link>
+  );
+}
 
-function SearchBar() {
-  const [search, setSearch] = useState('');
-  const [city, setCity] = useState('');
+function HeroSearch({ categories }) {
+  const { t, categoryName, cityName } = useI18n();
   const navigate = useNavigate();
+  const [category, setCategory] = useState('');
+  const [city, setCity] = useState('');
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const p = new URLSearchParams();
-    if (search) p.set('search', search);
-    if (city) p.set('city', city);
-    navigate(`/artisans?${p.toString()}`);
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const params = new URLSearchParams();
+    if (category) params.set('category', category);
+    if (city) params.set('city', city);
+    const query = params.toString();
+    navigate(query ? `/artisans?${query}` : '/artisans');
   };
 
   return (
-    <form onSubmit={handleSearch} className="w-full max-w-3xl">
-      <div className="flex flex-col sm:flex-row gap-0 bg-white rounded-2xl shadow-2xl overflow-hidden p-1.5">
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Quel artisan cherchez-vous ? ex: plombier..."
-          className="flex-1 px-5 py-3.5 text-navy placeholder:text-gray-400 focus:outline-none text-sm bg-transparent"
-        />
-        <div className="w-px bg-gray-100 hidden sm:block my-2" />
-        <select
-          value={city}
-          onChange={e => setCity(e.target.value)}
-          className="sm:w-44 px-4 py-3.5 text-navy text-sm focus:outline-none bg-transparent cursor-pointer"
-        >
-          <option value="">📍 Toutes les villes</option>
-          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+    <form
+      onSubmit={handleSubmit}
+      className="mt-9 grid gap-3 rounded-xl bg-white p-3 shadow-pop sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end"
+    >
+      <div>
+        <label htmlFor="hero-service" className="mb-1 block text-xs font-medium text-sand-600">{t('home.hero.service')}</label>
+        <select id="hero-service" value={category} onChange={(e) => setCategory(e.target.value)} className="select h-12 text-[15px]">
+          <option value="">{t('home.hero.allServices')}</option>
+          {categories.map((c) => (
+            <option key={c.slug} value={c.slug}>{categoryName(c)}</option>
+          ))}
         </select>
-        <button type="submit" className="bg-saffron hover:bg-saffron-600 text-white font-bold px-7 py-3.5 rounded-xl text-sm transition-all active:scale-95 whitespace-nowrap">
-          Rechercher →
-        </button>
       </div>
-      <div className="flex flex-wrap justify-center gap-2 mt-4">
-        {['Plombier', 'Électricien', 'Peintre', 'Déménageur', 'Menuisier'].map(s => (
-          <button key={s} type="button" onClick={() => { setSearch(s); navigate(`/artisans?search=${s}`); }}
-            className="text-white/60 hover:text-white text-xs border border-white/20 hover:border-white/40 px-3 py-1 rounded-full transition-all">
-            {s}
-          </button>
-        ))}
+      <div>
+        <label htmlFor="hero-city" className="mb-1 block text-xs font-medium text-sand-600">{t('home.hero.city')}</label>
+        <select id="hero-city" value={city} onChange={(e) => setCity(e.target.value)} className="select h-12 text-[15px]">
+          <option value="">{t('home.hero.allCities')}</option>
+          {CITIES.map((c) => (
+            <option key={c} value={c}>{cityName(c)}</option>
+          ))}
+        </select>
       </div>
+      <button type="submit" className="btn btn-accent btn-lg h-12 font-semibold">
+        <Icon name="search" className="h-4 w-4" strokeWidth={2.25} />
+        {t('home.hero.submit')}
+      </button>
     </form>
   );
 }
 
-export default function Home() {
-  const [categories, setCategories] = useState(MOCK_CATEGORIES);
-  const [featured, setFeatured] = useState(MOCK_ARTISANS);
-  const [plans, setPlans] = useState([]);
-  const [testimonialIdx, setTestimonialIdx] = useState(0);
-
-  useEffect(() => {
-    api.get('/categories').then(r => { if (r.data?.length) setCategories(r.data); }).catch(() => {});
-    api.get('/artisans?sort=premium&limit=6').then(r => { if (r.data?.artisans?.length) setFeatured(r.data.artisans); }).catch(() => {});
-    api.get('/subscriptions/plans').then(r => setPlans(r.data)).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    const t = setInterval(() => setTestimonialIdx(i => (i + 1) % MOCK_TESTIMONIALS.length), 5000);
-    return () => clearInterval(t);
-  }, []);
+function HeroPanel({ artisans }) {
+  const { t, categoryName, cityName } = useI18n();
 
   return (
-    <div className="pt-16 overflow-x-hidden">
-
-      {/* ═══════════════════════════════════════════
-          HERO
-      ═══════════════════════════════════════════ */}
-      <section className="gradient-navy relative overflow-hidden min-h-[88vh] flex items-center">
-        {/* Dot pattern */}
-        <div className="absolute inset-0 dot-pattern opacity-40" />
-        {/* Glow blobs */}
-        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-saffron/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-emerald/10 rounded-full blur-3xl" />
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 w-full">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            {/* Left content */}
-            <motion.div initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="flex-1 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-saffron/10 border border-saffron/20 text-saffron rounded-full px-4 py-1.5 text-sm font-semibold mb-6">
-                <span className="w-2 h-2 bg-saffron rounded-full animate-pulse" />
-                🇲🇦 La marketplace marocaine de confiance
-              </div>
-              <h1 className="font-display font-bold text-white text-5xl md:text-6xl lg:text-7xl leading-[1.05] mb-6">
-                <span className="block text-white/90">الحرفي المناسب</span>
-                <span className="block text-saffron mt-1">وقت ما تحتاج</span>
-              </h1>
-              <p className="text-white/65 text-lg md:text-xl mb-10 max-w-lg leading-relaxed">
-                Trouvez des artisans <strong className="text-white/90">qualifiés et vérifiés</strong> près de chez vous — plombiers, électriciens, menuisiers, peintres et plus encore.
-              </p>
-              <SearchBar />
-            </motion.div>
-
-            {/* Right: floating cards */}
-            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="hidden lg:block flex-shrink-0 relative w-80">
-              {/* Main artisan card */}
-              <div className="bg-white rounded-2xl shadow-2xl p-5 mb-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-white font-bold text-lg">KB</div>
-                  <div>
-                    <div className="font-bold text-navy text-sm">Khalid Benmoussa</div>
-                    <div className="text-gray-400 text-xs flex items-center gap-1">🔧 Plombier · Casablanca</div>
-                  </div>
-                  <div className="ml-auto w-2.5 h-2.5 bg-emerald rounded-full" />
-                </div>
-                <div className="flex items-center gap-1 mb-3">
-                  {'★★★★★'.split('').map((s, i) => <span key={i} className="text-saffron text-sm">{s}</span>)}
-                  <span className="text-gray-500 text-xs ml-1">4.9 (47 avis)</span>
-                </div>
-                <div className="flex gap-2 text-xs">
-                  <span className="badge-emerald">✓ Vérifié</span>
-                  <span className="badge-saffron">⭐ Premium</span>
-                  <span className="badge-navy">12 ans exp.</span>
-                </div>
-              </div>
-              {/* Floating stats */}
-              <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute -left-10 top-0 bg-saffron text-white rounded-2xl shadow-xl px-4 py-3 text-center">
-                <div className="font-bold text-xl">2k+</div>
-                <div className="text-xs opacity-80">Artisans</div>
-              </motion.div>
-              <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-                className="absolute -right-8 bottom-8 bg-emerald text-white rounded-2xl shadow-xl px-4 py-3 text-center">
-                <div className="font-bold text-xl">4.8★</div>
-                <div className="text-xs opacity-80">Note moy.</div>
-              </motion.div>
-              {/* Request card */}
-              <div className="glass rounded-2xl p-4 flex items-center gap-3">
-                <div className="w-9 h-9 bg-saffron/20 rounded-xl flex items-center justify-center text-lg">📋</div>
-                <div>
-                  <div className="text-white text-xs font-semibold">Nouveau devis reçu</div>
-                  <div className="text-white/50 text-xs">il y a 2 minutes</div>
-                </div>
-                <div className="ml-auto w-2 h-2 bg-saffron rounded-full animate-pulse" />
-              </div>
-            </motion.div>
-          </div>
+    <div className="overflow-hidden rounded-xl bg-white shadow-pop">
+      <div className="flex items-center justify-between gap-4 border-b border-sand-200 px-5 py-4">
+        <div>
+          <p className="text-sm font-semibold text-navy-900">{t('home.hero.panelTitle')}</p>
+          <p className="mt-0.5 text-xs text-sand-600">{t('home.hero.panelSubtitle')}</p>
         </div>
-
-        {/* Wave bottom */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 60" preserveAspectRatio="none" className="w-full h-12 fill-cream">
-            <path d="M0,60 C360,0 1080,0 1440,60 L1440,60 L0,60 Z"/>
-          </svg>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          STATS BAR
-      ═══════════════════════════════════════════ */}
-      <section className="bg-cream py-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-gray-200">
-            {STATS.map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="text-center px-6 py-4">
-                <div className="text-2xl mb-1">{s.icon}</div>
-                <div className="font-display font-bold text-3xl text-navy">{s.value}</div>
-                <div className="text-gray-500 text-sm mt-1">{s.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          CATEGORIES
-      ═══════════════════════════════════════════ */}
-      <section className="bg-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <div className="section-label justify-center">— Nos services</div>
-            <h2 className="section-title">Tous les corps de métier</h2>
-            <p className="section-subtitle max-w-xl mx-auto">Des professionnels qualifiés pour chaque besoin, disponibles dans votre ville.</p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {categories.map((cat, i) => (
-              <motion.div key={cat.id || cat.slug} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-                <Link to={`/artisans?category=${cat.slug}`}
-                  className="group block rounded-2xl overflow-hidden card-hover border border-gray-100 hover:border-saffron/30">
-                  {/* Colored top band */}
-                  <div className={`h-2 bg-gradient-to-r ${cat.gradient || 'from-navy to-navy-700'}`} />
-                  <div className="p-5 bg-white">
-                    <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-200 inline-block">{cat.icon}</div>
-                    <div className="font-display font-bold text-navy text-sm mb-0.5">{cat.name_fr}</div>
-                    <div className="text-gray-400 text-xs">{cat.name_ar}</div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="text-xs text-gray-400">{cat.artisan_count || 0} artisans</span>
-                      <span className="text-saffron text-xs font-semibold group-hover:translate-x-1 transition-transform inline-block">→</span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          HOW IT WORKS
-      ═══════════════════════════════════════════ */}
-      <section className="bg-cream py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-14">
-            <div className="section-label justify-center">— Simple & rapide</div>
-            <h2 className="section-title">Comment ça marche ?</h2>
-            <p className="section-subtitle">En 3 étapes, trouvez et contactez l'artisan qu'il vous faut.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            {/* Connecting line on desktop */}
-            <div className="hidden md:block absolute top-16 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-saffron/20 via-saffron to-saffron/20 z-0" />
-            {[
-              { n: '01', icon: '🔍', title: 'Recherchez', desc: 'Choisissez votre métier et votre ville. Notre moteur de recherche trouve les meilleurs artisans en quelques secondes.', color: 'from-saffron to-saffron-600' },
-              { n: '02', icon: '👀', title: 'Comparez', desc: 'Consultez les profils complets, les notes, les avis clients vérifiés et les portfolios photos.', color: 'from-navy to-navy-700' },
-              { n: '03', icon: '✅', title: 'Contactez', desc: 'Envoyez une demande de devis gratuite et démarrez votre projet en toute confiance.', color: 'from-emerald to-emerald-700' },
-            ].map((step, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.2 }}
-                className="relative z-10 bg-white rounded-2xl p-7 shadow-sm border border-gray-100 text-center group hover:shadow-lg transition-all duration-300">
-                <div className={`w-16 h-16 bg-gradient-to-br ${step.color} rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5 shadow-lg group-hover:scale-105 transition-transform`}>
-                  {step.icon}
-                </div>
-                <div className="absolute -top-3 -right-3 w-8 h-8 bg-saffron rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md">
-                  {i + 1}
-                </div>
-                <h3 className="font-display font-bold text-navy text-xl mb-3">{step.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{step.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-          <div className="text-center mt-10">
-            <Link to="/artisans" className="btn-primary px-8 py-3.5 text-sm">
-              Trouver mon artisan maintenant →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          FEATURED ARTISANS
-      ═══════════════════════════════════════════ */}
-      <section className="bg-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-            <div>
-              <div className="section-label">— Top artisans</div>
-              <h2 className="section-title">Artisans en vedette</h2>
-              <p className="section-subtitle">Les professionnels les mieux notés de la plateforme.</p>
-            </div>
-            <Link to="/artisans" className="btn-outline py-2.5 px-6 text-sm self-start md:self-auto">
-              Voir tous les artisans →
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featured.slice(0, 6).map((a, i) => <ArtisanCard key={a.id} artisan={a} index={i} />)}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          TRUST / WHY US
-      ═══════════════════════════════════════════ */}
-      <section className="bg-cream py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <div className="section-label justify-center">— Pourquoi nous choisir</div>
-            <h2 className="section-title">La confiance avant tout</h2>
-            <p className="section-subtitle max-w-xl mx-auto">M3alemConnect garantit qualité, transparence et sécurité à chaque mission.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {TRUST_FEATURES.map((f, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-saffron/30 hover:shadow-md transition-all duration-300 group">
-                <div className="text-3xl mb-4 group-hover:scale-110 transition-transform inline-block">{f.icon}</div>
-                <h3 className="font-display font-bold text-navy text-base mb-2">{f.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          TESTIMONIALS
-      ═══════════════════════════════════════════ */}
-      <section className="gradient-navy py-20 relative overflow-hidden">
-        <div className="absolute inset-0 dot-pattern opacity-30" />
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <div className="section-label justify-center text-saffron">— Avis clients</div>
-            <h2 className="font-display font-bold text-white text-3xl md:text-4xl">Ce que disent nos clients</h2>
-          </div>
-
-          {/* Testimonial slider */}
-          <div className="relative">
-            <AnimatePresence mode="wait">
-              <motion.div key={testimonialIdx}
-                initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.4 }}
-                className="bg-white/10 border border-white/10 rounded-3xl p-8 md:p-10 max-w-2xl mx-auto text-center">
-                <div className="text-4xl mb-4">❝</div>
-                <p className="text-white text-lg leading-relaxed mb-6 italic">
-                  {MOCK_TESTIMONIALS[testimonialIdx].text}
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+          <Icon name="shieldCheck" className="h-5 w-5" />
+        </span>
+      </div>
+      <ul className="divide-y divide-sand-200">
+        {artisans.map((artisan) => (
+          <li key={artisan.id}>
+            <Link to={`/artisans/${artisan.id}`} className="flex items-center gap-3.5 px-5 py-4 transition-colors hover:bg-sand-50">
+              <Avatar firstName={artisan.first_name} lastName={artisan.last_name} src={artisan.avatar_url} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-navy-900"><bdi>{artisan.first_name} {artisan.last_name}</bdi></p>
+                <p className="mt-0.5 truncate text-xs text-sand-600">
+                  {[categoryName(artisan), cityName(artisan.city)].filter(Boolean).join(' · ')}
                 </p>
-                <div className="flex items-center justify-center gap-3">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                    style={{ background: MOCK_TESTIMONIALS[testimonialIdx].color }}>
-                    {MOCK_TESTIMONIALS[testimonialIdx].initials}
-                  </div>
-                  <div className="text-left">
-                    <div className="text-white font-semibold text-sm">{MOCK_TESTIMONIALS[testimonialIdx].name}</div>
-                    <div className="text-white/50 text-xs">{MOCK_TESTIMONIALS[testimonialIdx].city} · {MOCK_TESTIMONIALS[testimonialIdx].service}</div>
-                  </div>
-                  <div className="ml-2 stars text-saffron text-sm">
-                    {'★'.repeat(MOCK_TESTIMONIALS[testimonialIdx].rating)}
-                  </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Dots */}
-            <div className="flex justify-center gap-2 mt-6">
-              {MOCK_TESTIMONIALS.map((_, i) => (
-                <button key={i} onClick={() => setTestimonialIdx(i)}
-                  className={`rounded-full transition-all duration-300 ${i === testimonialIdx ? 'w-6 h-2 bg-saffron' : 'w-2 h-2 bg-white/30 hover:bg-white/50'}`} />
-              ))}
-            </div>
-          </div>
-
-          {/* Mini stats row */}
-          <div className="grid grid-cols-3 gap-4 mt-14 max-w-xl mx-auto">
-            {[['98%', 'de satisfaction'], ['24h', 'temps de réponse'], ['0', 'frais cachés']].map(([v, l], i) => (
-              <div key={i} className="text-center">
-                <div className="font-display font-bold text-saffron text-2xl">{v}</div>
-                <div className="text-white/50 text-xs mt-0.5">{l}</div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          CITIES
-      ═══════════════════════════════════════════ */}
-      <section className="bg-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <div className="section-label justify-center">— Couverture nationale</div>
-            <h2 className="section-title">Disponible dans tout le Maroc</h2>
-            <p className="section-subtitle">Des artisans qualifiés dans les principales villes du royaume.</p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {MOROCCAN_CITIES.map((city, i) => (
-              <motion.div key={city.name} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.07 }}>
-                <Link to={`/artisans?city=${city.name}`}
-                  className="group block bg-cream hover:bg-navy rounded-2xl p-5 text-center transition-all duration-300 border border-gray-100 hover:border-navy card-hover">
-                  <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{city.emoji}</div>
-                  <div className="font-display font-bold text-navy group-hover:text-white text-sm transition-colors">{city.name}</div>
-                  <div className="text-gray-400 group-hover:text-white/60 text-xs mt-0.5 transition-colors">{city.artisans} artisans</div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          ARTISAN CTA (split)
-      ═══════════════════════════════════════════ */}
-      <section className="bg-cream py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="gradient-emerald rounded-3xl overflow-hidden">
-            <div className="flex flex-col md:flex-row">
-              {/* Left */}
-              <div className="flex-1 p-10 md:p-14">
-                <div className="inline-flex items-center gap-2 bg-white/10 text-white/80 text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
-                  🔧 Pour les artisans
-                </div>
-                <h2 className="font-display font-bold text-white text-3xl md:text-4xl mb-4 leading-tight">
-                  Développez votre activité avec M3alemConnect
-                </h2>
-                <p className="text-white/75 text-base leading-relaxed mb-8 max-w-md">
-                  Créez votre profil professionnel, recevez des demandes de devis qualifiées et développez votre clientèle au Maroc.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Link to="/register?role=artisan" className="bg-saffron hover:bg-saffron-600 text-white font-bold py-3.5 px-7 rounded-xl transition-all active:scale-95 text-sm shadow-lg">
-                    Créer mon profil gratuit →
-                  </Link>
-                  <Link to="/artisans" className="bg-white/10 hover:bg-white/20 text-white font-semibold py-3.5 px-7 rounded-xl transition-all text-sm border border-white/20">
-                    Voir un exemple
-                  </Link>
-                </div>
+              <div className="shrink-0 text-end">
+                <StarRating rating={artisan.rating_avg} size="xs" showValue />
+                <p className="mt-1 text-xs text-sand-600">{t('common.reviews', { count: Number(artisan.rating_count) || 0 })}</p>
               </div>
-              {/* Right: benefits */}
-              <div className="md:w-80 bg-black/10 p-10 flex flex-col justify-center gap-4">
-                {[
-                  { icon: '📈', text: 'Plus de visibilité en ligne' },
-                  { icon: '💼', text: 'Recevez des devis qualifiés' },
-                  { icon: '⭐', text: 'Construisez votre réputation' },
-                  { icon: '💰', text: 'Abonnement à partir de 0 MAD' },
-                  { icon: '📱', text: 'Gérez tout depuis votre dashboard' },
-                ].map((b, i) => (
-                  <div key={i} className="flex items-center gap-3 text-white">
-                    <span className="text-xl">{b.icon}</span>
-                    <span className="text-sm font-medium">{b.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          SUBSCRIPTION PLANS
-      ═══════════════════════════════════════════ */}
-      <SubscriptionSection plans={plans} />
-
-      {/* ═══════════════════════════════════════════
-          FINAL CTA
-      ═══════════════════════════════════════════ */}
-      <section className="bg-navy py-20 relative overflow-hidden">
-        <div className="absolute inset-0 dot-pattern opacity-20" />
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="font-display font-bold text-white text-4xl md:text-5xl mb-4">
-              Prêt à démarrer ?
-            </h2>
-            <p className="text-white/60 text-lg mb-8">
-              Rejoignez des milliers de Marocains qui font confiance à M3alemConnect pour trouver les meilleurs artisans.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/artisans" className="btn-primary px-8 py-4 text-sm shadow-2xl">
-                🔍 Trouver un artisan
-              </Link>
-              <Link to="/register" className="border-2 border-white/30 text-white hover:bg-white/10 font-semibold py-4 px-8 rounded-xl transition-all text-sm inline-flex items-center justify-center">
-                Créer un compte gratuit
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <Link
+        to="/artisans"
+        className="flex items-center justify-between border-t border-sand-200 bg-sand-50 px-5 py-3.5 text-sm font-semibold text-navy-800 transition-colors hover:bg-saffron-50 hover:text-navy-900"
+      >
+        {t('home.hero.panelLink')}
+        <Icon name="arrowRight" className="h-4 w-4" flipInRtl />
+      </Link>
     </div>
   );
 }
 
-/* ─── Subscription Plans Section ─── */
-const FALLBACK_PLANS = [
-  { id: 1, name: 'Gratuit', price: 0, features: ['Profil de base', 'Visible dans la recherche', '5 devis par mois', 'Support par email'] },
-  { id: 2, name: 'Pro', price: 199, features: ['Profil mis en avant', 'Badge Vérifié Pro', 'Devis illimités', 'Statistiques du profil', 'Support prioritaire'] },
-  { id: 3, name: 'Premium', price: 399, features: ['Position sponsorisée', 'Badge Premium ✨', 'Devis illimités', 'Statistiques avancées', 'Support dédié 24/7', 'Mise en avant catégorie'] },
-];
+export default function Home() {
+  const { t, tm, categoryName, cityName } = useI18n();
+  const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
+  const [featured, setFeatured] = useState(DEMO_FEATURED);
+  const [plans, setPlans] = useState(FALLBACK_PLANS);
 
-function SubscriptionSection({ plans }) {
-  const displayPlans = plans?.length ? plans : FALLBACK_PLANS;
+  useEffect(() => {
+    // Each call keeps its demo fallback, so the page always has something to show.
+    fetchCategories().then((rows) => { if (rows?.length) setCategories(rows); }).catch(() => {});
+    searchArtisans({ sort: 'rating', limit: 6 }).then(({ artisans }) => { if (artisans.length) setFeatured(artisans); }).catch(() => {});
+    fetchPlans().then((rows) => { if (rows?.length) setPlans(rows); }).catch(() => {});
+  }, []);
+
   return (
-    <section className="bg-white py-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-12">
-          <div className="section-label justify-center">— Pour les artisans</div>
-          <h2 className="section-title">Choisissez votre plan</h2>
-          <p className="section-subtitle">Commencez gratuitement, évoluez selon vos besoins.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {displayPlans.map((plan, i) => {
-            const popular = i === 1;
-            return (
-              <motion.div key={plan.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.12 }}
-                className={`relative rounded-2xl border-2 p-7 transition-all ${popular ? 'border-saffron shadow-2xl shadow-saffron/10 scale-105' : 'border-gray-200 hover:border-saffron/40 hover:shadow-lg'}`}>
-                {popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-saffron text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg">
-                    ⭐ Le plus populaire
-                  </div>
-                )}
-                <div className={`w-10 h-10 rounded-xl mb-4 flex items-center justify-center text-lg ${popular ? 'bg-saffron/10' : 'bg-cream'}`}>
-                  {i === 0 ? '🆓' : i === 1 ? '🚀' : '👑'}
-                </div>
-                <h3 className="font-display font-bold text-navy text-xl mb-1">{plan.name}</h3>
-                <div className="flex items-baseline gap-1.5 mb-5">
-                  {plan.price === 0 ? (
-                    <span className="font-display font-bold text-4xl text-navy">Gratuit</span>
-                  ) : (
-                    <>
-                      <span className="font-display font-bold text-4xl text-navy">{plan.price}</span>
-                      <span className="text-gray-400 text-sm">MAD / mois</span>
-                    </>
-                  )}
-                </div>
-                <ul className="space-y-3 mb-7">
-                  {(plan.features || []).map((f, j) => (
-                    <li key={j} className="flex items-start gap-2.5 text-sm text-gray-600">
-                      <span className="text-emerald font-bold mt-0.5 flex-shrink-0">✓</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/register?role=artisan"
-                  className={`block text-center py-3 rounded-xl font-semibold text-sm transition-all ${popular ? 'btn-primary shadow-lg' : i === 2 ? 'btn-emerald' : 'btn-outline'}`}>
-                  {plan.price === 0 ? 'Commencer gratuitement' : `Souscrire au plan ${plan.name}`}
+    <>
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-navy-900">
+        <ZelligePattern className="text-white/[0.07] [mask-image:linear-gradient(to_left,#000_10%,transparent_65%)] rtl:[mask-image:linear-gradient(to_right,#000_10%,transparent_65%)]" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-saffron-500" aria-hidden="true" />
+
+        <div className="container-page relative grid gap-12 pb-28 pt-14 lg:grid-cols-12 lg:items-center lg:gap-12 lg:pb-36 lg:pt-20">
+          <div className="lg:col-span-7">
+            <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.1em] text-saffron-300">
+              <span className="h-px w-8 bg-saffron-400" aria-hidden="true" />
+              {t('home.hero.eyebrow')}
+            </p>
+            <h1 className="mt-5 max-w-2xl text-[40px] font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[58px]">
+              {t('home.hero.titleLead')}{' '}
+              <span className="text-saffron-400 sm:block">{t('home.hero.titleHighlight')}</span>
+            </h1>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-navy-100">{t('home.hero.subtitle')}</p>
+
+            <HeroSearch categories={categories} />
+
+            <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
+              <span className="me-1 text-navy-200">{t('home.hero.popular')}</span>
+              {POPULAR_CATEGORIES.map((slug) => (
+                <Link
+                  key={slug}
+                  to={`/artisans?category=${slug}`}
+                  className="rounded-full border border-white/20 px-3 py-1 text-navy-50 transition-colors hover:border-saffron-400 hover:bg-white/5 hover:text-white"
+                >
+                  {categoryName(slug)}
                 </Link>
-              </motion.div>
-            );
-          })}
+              ))}
+            </div>
+
+            <dl className="mt-10 grid max-w-lg grid-cols-3 divide-x divide-white/10 border-t border-white/10 pt-6 rtl:divide-x-reverse">
+              {tm('home.hero.stats').map((stat) => (
+                <div key={stat.label} className="flex flex-col-reverse justify-end px-4 first:ps-0 last:pe-0">
+                  <dt className="mt-1 text-xs leading-snug text-navy-200 sm:text-sm">{stat.label}</dt>
+                  <dd className="text-2xl font-semibold tracking-tight text-white">
+                    <bdi dir="ltr">{stat.value}</bdi>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="lg:col-span-5">
+            <HeroPanel artisans={featured.slice(0, 3)} />
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Trust — overlaps the hero edge */}
+      <section className="relative z-10 -mt-16 lg:-mt-20">
+        <div className="container-page">
+          <div className="grid gap-px overflow-hidden rounded-xl border border-sand-200 bg-sand-200 shadow-raised sm:grid-cols-2 lg:grid-cols-4">
+            {tm('home.trust').map((item, index) => (
+              <div key={item.title} className="flex gap-3.5 bg-white p-6">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-saffron-50 text-saffron-700 ring-1 ring-inset ring-saffron-100">
+                  <Icon name={TRUST_ICONS[index]} className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-navy-900">{item.title}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-sand-600">{item.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="py-16 sm:py-20">
+        <div className="container-page">
+          <SectionHeading
+            eyebrow={t('home.categories.eyebrow')}
+            title={t('home.categories.title')}
+            subtitle={t('home.categories.subtitle')}
+            action={<ArrowLink to="/artisans">{t('home.categories.all')}</ArrowLink>}
+          />
+          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {categories.map((category) => {
+              const description = tm(`categories.${category.slug}.desc`);
+              const count = Number(category.artisan_count) || 0;
+              return (
+                <Link
+                  key={category.slug}
+                  to={`/artisans?category=${category.slug}`}
+                  className="card group flex items-start gap-4 p-5 transition-all hover:-translate-y-0.5 hover:border-saffron-300 hover:shadow-raised"
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-saffron-300 transition-colors group-hover:bg-saffron-500 group-hover:text-navy-950">
+                    <CategoryIcon slug={category.slug} className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block font-semibold text-navy-900">{categoryName(category)}</span>
+                    {description && <span className="mt-1 block text-sm leading-snug text-sand-600">{description}</span>}
+                    {count > 0 && (
+                      <span className="mt-3 block text-xs font-medium text-saffron-700">{t('common.artisans', { count })}</span>
+                    )}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="border-y border-sand-200 bg-white py-16 sm:py-20">
+        <div className="container-page grid gap-12 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <p className="eyebrow">{t('home.how.eyebrow')}</p>
+            <h2 className="heading-section mt-3">{t('home.how.title')}</h2>
+            <p className="lead mt-3">{t('home.how.subtitle')}</p>
+            <ArrowLink to="/artisans" className="btn btn-primary mt-8">{t('home.how.cta')}</ArrowLink>
+          </div>
+          <ol className="grid gap-px overflow-hidden rounded-xl border border-sand-200 bg-sand-200 sm:grid-cols-3 lg:col-span-8">
+            {tm('home.how.steps').map((step, index) => (
+              <li key={step.title} className="bg-white p-6">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-saffron-500 text-sm font-semibold text-navy-950">
+                  {index + 1}
+                </span>
+                <h3 className="mt-6 text-lg font-semibold text-navy-900">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-sand-600">{step.text}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* Featured artisans */}
+      <section className="py-16 sm:py-20">
+        <div className="container-page">
+          <SectionHeading
+            eyebrow={t('home.featured.eyebrow')}
+            title={t('home.featured.title')}
+            subtitle={t('home.featured.subtitle')}
+            action={<ArrowLink to="/artisans">{t('home.featured.cta')}</ArrowLink>}
+          />
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {featured.slice(0, 6).map((artisan) => (
+              <ArtisanCard key={artisan.id} artisan={artisan} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="border-y border-sand-200 bg-sand-100 py-16 sm:py-20">
+        <div className="container-page">
+          <SectionHeading eyebrow={t('home.testimonials.eyebrow')} title={t('home.testimonials.title')} />
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {tm('home.testimonials.items').map((item) => {
+              const [first = '', last = ''] = item.name.split(' ');
+              return (
+                <figure key={item.name} className="card flex flex-col border-t-2 border-t-saffron-500 p-6">
+                  <StarRating rating={5} />
+                  <blockquote className="mt-4 flex-1 text-[15px] leading-relaxed text-navy-900">{item.text}</blockquote>
+                  <figcaption className="mt-6 flex items-center gap-3 border-t border-sand-200 pt-4">
+                    <Avatar size="sm" firstName={first} lastName={last} />
+                    <div>
+                      <p className="text-sm font-semibold text-navy-900">{item.name}</p>
+                      <p className="mt-0.5 text-xs text-sand-600">{categoryName(item.service)} · {item.city}</p>
+                    </div>
+                  </figcaption>
+                </figure>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Cities */}
+      <section className="bg-white py-16 sm:py-20">
+        <div className="container-page grid gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <p className="eyebrow">{t('home.cities.eyebrow')}</p>
+            <h2 className="heading-section mt-3">{t('home.cities.title')}</h2>
+            <p className="lead mt-3">{t('home.cities.subtitle')}</p>
+          </div>
+          <ul className="grid gap-px overflow-hidden rounded-xl border border-sand-200 bg-sand-200 sm:grid-cols-2 lg:col-span-8">
+            {CITY_STATS.map((city) => (
+              <li key={city.name} className="bg-white">
+                <Link
+                  to={`/artisans?city=${encodeURIComponent(city.name)}`}
+                  className="group flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-saffron-50"
+                >
+                  <span className="flex items-center gap-3">
+                    <Icon name="mapPin" className="h-4 w-4 text-saffron-600" />
+                    <span className="font-medium text-navy-900">{cityName(city.name)}</span>
+                  </span>
+                  <span className="flex items-center gap-2 text-sm text-sand-600">
+                    {t('common.artisans', { count: city.artisans })}
+                    <Icon name="arrowRight" className="h-4 w-4 text-sand-400 transition-colors group-hover:text-navy" flipInRtl />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* For artisans + plans */}
+      <section className="border-t border-sand-200 py-16 sm:py-20">
+        <div className="container-page">
+          <div className="relative grid gap-10 overflow-hidden rounded-xl bg-navy-900 p-8 text-white sm:p-12 lg:grid-cols-12 lg:gap-12">
+            <ZelligePattern className="text-white/[0.05]" />
+            <div className="relative lg:col-span-7">
+              <p className="eyebrow text-saffron-300">{t('home.pro.eyebrow')}</p>
+              <h2 className="mt-3 text-[28px] font-semibold leading-tight tracking-tight sm:text-[34px]">{t('home.pro.title')}</h2>
+              <p className="mt-4 max-w-xl leading-relaxed text-navy-100">{t('home.pro.text')}</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link to="/register?role=artisan" className="btn btn-accent btn-lg font-semibold">{t('home.pro.cta')}</Link>
+                <a href="#plans" className="btn btn-on-dark btn-lg">{t('home.pro.secondary')}</a>
+              </div>
+            </div>
+            <ul className="relative space-y-4 self-center lg:col-span-5">
+              {tm('home.pro.benefits').map((benefit) => (
+                <li key={benefit} className="flex gap-3 text-[15px] leading-relaxed text-navy-50">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-saffron-500 text-navy-950">
+                    <Icon name="check" className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  </span>
+                  {benefit}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div id="plans" className="mt-16 scroll-mt-24">
+            <SectionHeading eyebrow={t('home.plans.eyebrow')} title={t('home.plans.title')} subtitle={t('home.plans.subtitle')} />
+            <div className="mt-10 grid gap-4 lg:grid-cols-3">
+              {plans.map((plan) => {
+                const highlighted = planKey(plan) === 'pro';
+                return (
+                  <PlanCard
+                    key={plan.id}
+                    plan={plan}
+                    highlighted={highlighted}
+                    action={
+                      <Link to="/register?role=artisan" className={`btn w-full ${highlighted ? 'btn-primary' : 'btn-secondary'}`}>
+                        {Number(plan.price) === 0
+                          ? t('home.plans.ctaFree')
+                          : t('home.plans.ctaPaid', { plan: t(`plans.${planKey(plan)}.name`) })}
+                      </Link>
+                    }
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-sand-200 bg-white py-16 sm:py-20">
+        <div className="container-page grid gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <p className="eyebrow">{t('home.faq.eyebrow')}</p>
+            <h2 className="heading-section mt-3">{t('home.faq.title')}</h2>
+            <p className="lead mt-3">{t('home.faq.subtitle')}</p>
+          </div>
+          <div className="divide-y divide-sand-200 border-y border-sand-200 lg:col-span-8">
+            {tm('home.faq.items').map((item) => (
+              <details key={item.q} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-medium text-navy-900 [&::-webkit-details-marker]:hidden">
+                  {item.q}
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sand-100 text-navy-700 transition-colors group-open:bg-saffron-500 group-open:text-navy-950">
+                    <Icon name="plus" className="h-4 w-4 transition-transform duration-200 group-open:rotate-45" strokeWidth={2.25} />
+                  </span>
+                </summary>
+                <p className="mt-3 max-w-2xl leading-relaxed text-sand-600">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final call to action */}
+      <section className="relative overflow-hidden bg-saffron-500">
+        <ZelligePattern className="text-navy-950/[0.06]" />
+        <div className="container-page relative flex flex-col items-start justify-between gap-6 py-14 md:flex-row md:items-center">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-navy-950 sm:text-[30px]">{t('home.finalCta.title')}</h2>
+            <p className="mt-2 text-navy-900/80">{t('home.finalCta.text')}</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link to="/artisans" className="btn btn-primary btn-lg">{t('home.finalCta.primary')}</Link>
+            <Link
+              to="/register?role=artisan"
+              className="btn btn-lg border border-navy-950/20 bg-white/50 text-navy-950 hover:bg-white/80"
+            >
+              {t('home.finalCta.secondary')}
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
