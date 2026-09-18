@@ -10,7 +10,7 @@ import AuthLayout from '../components/AuthLayout';
 import Field, { inputClass } from '../components/Field';
 import Icon from '../components/Icon';
 import { dashboardPath } from '../components/Navbar';
-import { CITIES, FALLBACK_CATEGORIES } from '../data/mockData';
+import { ALL_CITIES, FALLBACK_CATEGORIES } from '../data/mockData';
 
 const ROLES = [
   { value: 'client', icon: 'user', label: 'auth.roleClient', hint: 'auth.roleClientHint' },
@@ -181,7 +181,7 @@ export default function Register() {
           <Field id="reg-city" label={t('auth.city')} optional>
             <select id="reg-city" className="select" {...register('city')}>
               <option value="">{t('auth.selectCity')}</option>
-              {CITIES.map((city) => (
+              {[...ALL_CITIES].sort((a, b) => cityName(a).localeCompare(cityName(b))).map((city) => (
                 <option key={city} value={city}>{cityName(city)}</option>
               ))}
             </select>
