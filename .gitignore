@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.vercel
+
+# Secrets: never commit these. Use .env.example to document the variable names.
+.env
+.env.*
+!.env.example
+
+*.local
+.DS_Store
+Thumbs.db
