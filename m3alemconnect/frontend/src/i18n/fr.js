@@ -371,7 +371,7 @@ const fr = {
     selectTrade: 'Choisir un métier',
     tradeRequired: 'Veuillez choisir votre métier.',
     experience: 'Années d’expérience',
-    hourlyRate: 'Tarif horaire indicatif (MAD)',
+    hourlyRate: 'Tarif horaire (MAD)',
     bio: 'Présentation',
     bioPlaceholder: 'Votre expérience, vos spécialités, les quartiers où vous intervenez…',
     submitRegister: 'Créer mon compte',

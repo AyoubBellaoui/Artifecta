@@ -436,7 +436,7 @@ const ar = {
     selectTrade: 'اختيار مهنة',
     tradeRequired: 'يرجى اختيار مهنتك.',
     experience: 'سنوات الخبرة',
-    hourlyRate: 'السعر التقريبي للساعة (درهم)',
+    hourlyRate: 'السعر للساعة (درهم)',
     bio: 'نبذة',
     bioPlaceholder: 'خبرتك، تخصصاتك، الأحياء التي تتدخل فيها…',
     submitRegister: 'إنشاء حسابي',
