@@ -66,34 +66,6 @@ export default function HeroSection() {
           Nous concevons des expériences digitales évolutives, portées par le
           design, la technologie et l’intelligence artificielle.
         </motion.p>
-
-        <motion.a
-          href="#contact"
-          className="font-body font-medium flex items-center gap-3 px-8 py-4 rounded-full"
-          style={{
-            background: "rgba(255,255,255,0.75)",
-            color: "#142638",
-            fontSize: "1rem",
-            textDecoration: "none",
-            backdropFilter: "blur(6px)",
-            border: "1px solid rgba(255,255,255,0.5)",
-            boxShadow: "0 4px 24px rgba(20,38,56,0.12)",
-          }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.8 }}
-          whileHover={{ scale: 1.06, boxShadow: "0 8px 32px rgba(20,38,56,0.22)" }}
-          whileTap={{ scale: 0.97 }}
-        >
-          Démarrer un projet
-          <motion.span
-            style={{ fontSize: "1.1rem", display: "inline-block" }}
-            whileHover={{ x: 4 }}
-            transition={{ duration: 0.2 }}
-          >
-            →
-          </motion.span>
-        </motion.a>
       </div>
     </section>
   );
