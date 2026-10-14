@@ -42,6 +42,7 @@ Le script crée les tables, les règles de sécurité, le stockage des photos et
 ### 4. Lancer le site
 
 ```bash
+cd C:\Users\PC\Desktop\Artifecta\m3alemconnect\frontend
 cd frontend
 cp .env.example .env.local   # puis renseigner l'URL et la clé publique du projet
 npm install

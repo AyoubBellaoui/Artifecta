@@ -47,7 +47,7 @@ export const projects = [
     gradient: "linear-gradient(135deg, #0f2744, #1a4a8a)",
     accentColor: "#c8a04a",
     logo: "/WhatsApp Image 2026-05-05 at 14.37.32.jpeg",
-    url: "http://localhost:5174",
+    url: "https://m3alemconnect.vercel.app",
     featured: true,
   },
   {
