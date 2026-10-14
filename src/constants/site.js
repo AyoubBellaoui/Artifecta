@@ -4,7 +4,7 @@ export const CONTACT_IMAGE_SRC = "/Contact bg.png";
 
 // Contact form delivery. Get a key at web3forms.com by entering the inbox that should receive
 // messages. The key is meant to be used in the browser, so it is safe to keep here.
-export const WEB3FORMS_ACCESS_KEY = "";
+export const WEB3FORMS_ACCESS_KEY = "8f7404e0-adc3-4ecb-94d1-aa3623c8776a";
 
 export const navLinks = [
   { href: "#about", label: "À propos" },
