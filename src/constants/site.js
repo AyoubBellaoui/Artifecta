@@ -2,30 +2,34 @@ export const LOGO_SRC = "/LG.png";
 export const HERO_SRC = "/hero-bg.jpeg";
 export const CONTACT_IMAGE_SRC = "/Contact bg.png";
 
+// Contact form delivery. Get a key at web3forms.com by entering the inbox that should receive
+// messages. The key is meant to be used in the browser, so it is safe to keep here.
+export const WEB3FORMS_ACCESS_KEY = "";
+
 export const navLinks = [
   { href: "#about", label: "À propos" },
   { href: "#services", label: "Services" },
   { href: "#work", label: "Réalisations" },
 ];
 
+// Add `photo: "/ayoub.jpg"` (a file in public/) to show a real picture instead of the default avatar.
 export const teamMembers = [
   {
     name: "Ayoub B.",
     initials: "AB",
-    role: "Chef de Groupe",
-    specialty: "Développement Backend",
+    role: "Chef de groupe",
+    specialty: "Développement Full Stack",
   },
   {
-    name: "Alae",
+    name: "Alaa",
     initials: "AL",
-    role: "Responsable Création",
-    specialty: "Design & Frontend",
+    role: "Développement Frontend",
+    specialty: "Design UI/UX",
   },
   {
-    name: "Abdlwadoud",
+    name: "Abdelwadoud",
     initials: "AW",
-    role: "Stratège en Croissance",
-    specialty: "Marketing",
+    role: "Développement Backend",
   },
 ];
 

@@ -1,6 +1,7 @@
 # Artifecta
 
-A creative agency marketing site built with React + Vite + Tailwind CSS, with a small Node.js contact API.
+A creative agency marketing site built with React + Vite + Tailwind CSS. The contact form is sent by
+Web3Forms, so there is no backend to run.
 
 ---
 
@@ -9,9 +10,7 @@ A creative agency marketing site built with React + Vite + Tailwind CSS, with a 
 | Layer | Tech |
 |-------|------|
 | Frontend | React 19 + Vite + Tailwind CSS + Framer Motion |
-| Contact API | Node.js (no framework, built-in `http` module) |
-| Email | Resend |
-| Data storage | Local JSON file (`server/data/contact-submissions.json`) |
+| Contact form | Web3Forms (sent from the browser, no server) |
 
 ### Pages & sections
 
@@ -19,7 +18,7 @@ A creative agency marketing site built with React + Vite + Tailwind CSS, with a 
 - **About** — agency concept, team portraits (`LedByPortraits`)
 - **Services** — list of agency offerings
 - **Work** — selected projects / portfolio grid
-- **Contact** — form that posts to `/api/contact`
+- **Contact** — form sent to your inbox through Web3Forms
 - **Footer** — links and branding
 
 ---
@@ -39,39 +38,25 @@ A creative agency marketing site built with React + Vite + Tailwind CSS, with a 
 npm install
 ```
 
-### 2. Set up the contact API (optional — needed for the contact form)
+### 2. Connect the contact form
 
-```bash
-cp server/.env.example server/.env
+1. Go to [web3forms.com](https://web3forms.com), enter the inbox that should receive the messages,
+   and copy the access key they e-mail you.
+2. Paste it into `src/constants/site.js`:
+
+```js
+export const WEB3FORMS_ACCESS_KEY = "your-access-key";
 ```
 
-Open `server/.env` and fill in:
+The key is meant to be used in the browser, so it can be committed. Nothing needs to be set on
+Vercel. Without a key, the site runs normally but the form shows an error when submitted.
 
-```env
-RESEND_API_KEY=re_your_key_here          # get one free at resend.com
-CONTACT_TO_EMAIL=your-inbox@example.com  # where form submissions land
-CONTACT_FROM_EMAIL=Artifecta Contact <onboarding@resend.dev>
-```
+### 3. Start the site
 
-> If you skip this step the frontend still runs fine — form submissions just won't send emails. They are always saved to `server/data/contact-submissions.json` regardless.
-
-### 3. Start both servers
-
-Open **two terminals**:
-
-**Terminal 1 — Frontend (Vite)**
 ```bash
 npm run dev
 ```
 Runs at → `http://localhost:5173`
-
-**Terminal 2 — Contact API**
-```bash
-npm run server
-```
-Runs at → `http://localhost:8787`
-
-Vite automatically proxies `/api/*` requests to the API, so the contact form works out of the box.
 
 ---
 
@@ -96,6 +81,8 @@ Artifecta/
 ├── src/
 │   ├── App.jsx
 │   ├── main.jsx
+│   ├── constants/
+│   │   └── site.js           # site content + Web3Forms key
 │   └── components/
 │       ├── Navbar.jsx
 │       ├── LedByPortraits.jsx
@@ -106,11 +93,6 @@ Artifecta/
 │           ├── WorkSection.jsx
 │           ├── ContactSection.jsx
 │           └── Footer.jsx
-├── server/
-│   ├── index.js              # contact API
-│   ├── .env.example
-│   └── data/
-│       └── contact-submissions.json   # auto-created on first submission
 ├── m3alemconnect/            # separate sub-project (see its own README)
 ├── package.json
 └── vite.config.js
@@ -186,6 +168,5 @@ where id = (select id from auth.users where email = 'your@email.com');
 | Command | What it does |
 |---------|-------------|
 | `npm run dev` | Start Vite dev server on port 5173 |
-| `npm run server` | Start contact API on port 8787 |
 | `npm run build` | Build frontend for production → `dist/` |
 | `npm run preview` | Preview the production build locally |

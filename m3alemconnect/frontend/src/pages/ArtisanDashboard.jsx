@@ -521,7 +521,7 @@ export default function ArtisanDashboard() {
                         <button
                           type="button"
                           onClick={() => handleSubscribe(plan)}
-                          className={`btn w-full ${highlighted ? 'btn-primary' : 'btn-secondary'}`}
+                          className={`btn w-full ${highlighted ? 'btn-accent' : 'btn-secondary'}`}
                         >
                           {t('artisanDash.choosePlan')}
                         </button>

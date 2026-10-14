@@ -145,67 +145,54 @@ export default function AboutSection() {
           {teamMembers.map((member, index) => (
             <motion.div
               key={member.name}
-              className="relative overflow-hidden"
+              className="team-card overflow-hidden"
               style={{
                 borderRadius: "20px",
-                background: "#142638",
-                padding: "36px 32px 32px",
+                background: "#ffffff",
+                border: "1px solid rgba(20,38,56,0.08)",
               }}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.12 }}
-              whileHover={{ y: -5, transition: { duration: 0.25 } }}
             >
-              {/* Avatar */}
-              <div
-                className="flex items-center justify-center font-unbounded font-bold mb-7"
-                style={{
-                  width: "60px",
-                  height: "60px",
-                  borderRadius: "14px",
-                  background: "rgba(169,194,216,0.12)",
-                  border: "1px solid rgba(169,194,216,0.18)",
-                  color: "#a9c2d8",
-                  fontSize: "1.1rem",
-                  letterSpacing: "-0.03em",
-                }}
-              >
-                {member.initials}
+              {/* Cover band with the profile picture overlapping it, as on Facebook */}
+              <div style={{ background: "#a9c2d8", height: "110px" }} />
+
+              <div style={{ padding: "0 28px 28px" }}>
+                <div className="team-avatar">
+                  {member.photo ? (
+                    <img src={member.photo} alt={member.name} />
+                  ) : (
+                    // Default profile silhouette until a real photo is added
+                    <svg viewBox="0 0 100 100" aria-hidden="true">
+                      <circle cx="50" cy="38" r="18" />
+                      <ellipse cx="50" cy="94" rx="34" ry="30" />
+                    </svg>
+                  )}
+                </div>
+
+                <h3
+                  className="font-unbounded font-bold mb-2 mt-4"
+                  style={{ fontSize: "1.05rem", color: "#142638", letterSpacing: "-0.01em" }}
+                >
+                  {member.name}
+                </h3>
+                <p
+                  className="font-body font-medium"
+                  style={{ fontSize: "0.9rem", color: "#142638", margin: 0 }}
+                >
+                  {member.role}
+                </p>
+                {member.specialty && (
+                  <p
+                    className="font-body"
+                    style={{ fontSize: "0.85rem", color: "#142638", opacity: 0.55, margin: "2px 0 0" }}
+                  >
+                    {member.specialty}
+                  </p>
+                )}
               </div>
-
-              <h3
-                className="font-unbounded font-bold text-white mb-1"
-                style={{ fontSize: "1rem", letterSpacing: "-0.01em" }}
-              >
-                {member.name}
-              </h3>
-              <p
-                className="font-body font-medium mb-1"
-                style={{ fontSize: "0.85rem", color: "#a9c2d8" }}
-              >
-                {member.role}
-              </p>
-              <p
-                className="font-body"
-                style={{ fontSize: "0.8rem", color: "rgba(169,194,216,0.5)" }}
-              >
-                {member.specialty}
-              </p>
-
-              {/* Decorative circle */}
-              <div
-                className="absolute"
-                style={{
-                  width: "90px",
-                  height: "90px",
-                  borderRadius: "50%",
-                  background: "rgba(169,194,216,0.04)",
-                  border: "1px solid rgba(169,194,216,0.07)",
-                  top: "-24px",
-                  right: "-24px",
-                }}
-              />
             </motion.div>
           ))}
         </div>

@@ -5,19 +5,18 @@ function FeaturedCard({ project }) {
   return (
     <motion.article
       className="relative overflow-hidden w-full"
-      style={{ borderRadius: "24px", background: "#ffffff" }}
+      style={{ borderRadius: "20px", background: "#eaeaea" }}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.7 }}
-      whileHover={{ y: -4, transition: { duration: 0.25 } }}
     >
       <div className="flex flex-col md:flex-row" style={{ minHeight: "420px" }}>
-        {/* Left panel: logo */}
+        {/* Left panel: same grey as the logo file's own background, so the logo blends in */}
         <div
           className="flex items-center justify-center"
           style={{
-            background: "#ffffff",
+            background: "#eaeaea",
             flex: "0 0 42%",
             minHeight: "280px",
             padding: "48px 40px",
@@ -30,51 +29,38 @@ function FeaturedCard({ project }) {
               maxWidth: "340px",
               maxHeight: "280px",
               objectFit: "contain",
+              // Fade the JPEG's edges, which are a shade off the panel grey.
+              maskImage: "radial-gradient(closest-side, #000 80%, transparent 100%)",
+              WebkitMaskImage: "radial-gradient(closest-side, #000 80%, transparent 100%)",
             }}
           />
         </div>
 
         {/* Right panel: content */}
         <div
-          className="flex flex-col justify-end relative"
+          className="flex flex-col justify-end relative p-7 md:p-12"
           style={{
             background: "#142638",
             flex: 1,
-            padding: "48px",
             borderLeft: "none",
           }}
         >
           <div style={{ position: "relative", zIndex: 1 }}>
-            <div
-              className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full"
+            <p
+              className="font-unbounded font-medium uppercase mb-4"
               style={{
-                background: "rgba(200,160,74,0.1)",
-                border: "1px solid rgba(200,160,74,0.35)",
+                fontSize: "0.62rem",
+                color: "#a9c2d8",
+                opacity: 0.7,
+                letterSpacing: "0.14em",
               }}
             >
-              <div
-                style={{
-                  width: "6px",
-                  height: "6px",
-                  borderRadius: "50%",
-                  background: "#c8a04a",
-                }}
-              />
-              <span
-                className="font-unbounded font-medium"
-                style={{
-                  fontSize: "0.62rem",
-                  color: "#c8a04a",
-                  letterSpacing: "0.12em",
-                }}
-              >
-                PROJET CONCEPT
-              </span>
-            </div>
+              Projet concept · 2026
+            </p>
 
             <h3
               className="font-unbounded font-bold mb-3"
-              style={{ fontSize: "2rem", letterSpacing: "-0.02em", color: "#ffffff" }}
+              style={{ fontSize: "clamp(1.5rem, 6vw, 2rem)", letterSpacing: "-0.02em", color: "#ffffff" }}
             >
               {project.title}
             </h3>
@@ -89,21 +75,16 @@ function FeaturedCard({ project }) {
             >
               {project.description}
             </p>
-            <div className="flex gap-2 flex-wrap mb-8">
-              {project.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="font-body text-xs px-3 py-1 rounded-full"
-                  style={{
-                    background: "rgba(255,255,255,0.08)",
-                    color: "rgba(255,255,255,0.7)",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                  }}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+            <p
+              className="font-body text-sm mb-8 pt-4"
+              style={{
+                color: "#a9c2d8",
+                borderTop: "1px solid rgba(169,194,216,0.2)",
+                maxWidth: "400px",
+              }}
+            >
+              {project.tags.join(" / ")}
+            </p>
 
             {project.url && (
               <a
@@ -112,10 +93,10 @@ function FeaturedCard({ project }) {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 font-unbounded font-medium"
                 style={{
-                  background: "#c8a04a",
+                  background: "#a9c2d8",
                   color: "#142638",
-                  padding: "12px 24px",
-                  borderRadius: "100px",
+                  padding: "13px 22px",
+                  borderRadius: "10px",
                   fontSize: "0.75rem",
                   letterSpacing: "0.04em",
                   textDecoration: "none",

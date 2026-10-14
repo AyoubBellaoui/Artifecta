@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { CONTACT_IMAGE_SRC, projectTypes } from "../../constants/site";
+import { CONTACT_IMAGE_SRC, WEB3FORMS_ACCESS_KEY, projectTypes } from "../../constants/site";
 
 const SEND_ERROR_MESSAGE =
   "Impossible d’envoyer votre message pour le moment. Veuillez réessayer.";
@@ -10,6 +10,8 @@ const initialForm = {
   email: "",
   projectType: "",
   message: "",
+  // Honeypot: hidden from people, so only bots tick it. Web3Forms drops those submissions.
+  botcheck: false,
 };
 
 export default function ContactSection() {
@@ -23,27 +25,42 @@ export default function ContactSection() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setIsSubmitting(true);
     setStatus({ type: "idle", message: "" });
 
+    if (!WEB3FORMS_ACCESS_KEY) {
+      console.error("Contact form: WEB3FORMS_ACCESS_KEY is empty in src/constants/site.js.");
+      setStatus({ type: "error", message: SEND_ERROR_MESSAGE });
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      const response = await fetch("/api/contact", {
+      const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_ACCESS_KEY,
+          subject: `Nouveau message de ${form.name.trim()} via le site`,
+          from_name: "Site Artifecta",
+          name: form.name.trim(),
+          email: form.email.trim(),
+          "Type de projet": form.projectType,
+          message: form.message.trim(),
+          botcheck: form.botcheck,
+        }),
       });
 
       const payload = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        setStatus({ type: "error", message: payload.error || SEND_ERROR_MESSAGE });
+      if (!response.ok || !payload.success) {
+        // Web3Forms answers in English, so keep its reason in the console and show ours.
+        console.error("Contact form failed:", payload.message || payload.body?.message || response.status);
+        setStatus({ type: "error", message: SEND_ERROR_MESSAGE });
         return;
       }
 
-      setStatus({
-        type: "success",
-        message: payload.message || "Message envoyé avec succès.",
-      });
+      setStatus({ type: "success", message: "Merci, votre message a bien été envoyé." });
       setForm(initialForm);
     } catch {
       // Network failures surface browser-generated (English) messages, so show ours instead.
@@ -158,6 +175,16 @@ export default function ContactSection() {
                 onChange={(event) => updateField("message", event.target.value)}
                 style={{ resize: "vertical" }}
                 required
+              />
+              <input
+                type="checkbox"
+                name="botcheck"
+                checked={form.botcheck}
+                onChange={(event) => updateField("botcheck", event.target.checked)}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                style={{ display: "none" }}
               />
 
               {status.message ? (

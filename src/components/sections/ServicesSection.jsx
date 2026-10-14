@@ -6,36 +6,42 @@ const services = [
     title: "Identité de marque",
     description:
       "Des identités visuelles distinctives — logos, typographies et palettes de couleurs — qui rendent votre marque immédiatement reconnaissable et inoubliable.",
+    deliverables: ["Logo", "Charte graphique", "Typographies"],
   },
   {
     number: "02",
     title: "Design UI/UX",
     description:
       "Des interfaces intuitives et des parcours utilisateurs fluides, pensés pour maximiser l’engagement, l’ergonomie et la conversion à chaque point de contact.",
+    deliverables: ["Wireframes", "Prototypes", "Design system"],
   },
   {
     number: "03",
     title: "Web design",
     description:
       "Des sites modernes, responsives et visuellement percutants, qui reflètent les valeurs de votre marque et transforment vos visiteurs en clients.",
+    deliverables: ["Maquettes", "Responsive", "Landing pages"],
   },
   {
     number: "04",
     title: "Développement web",
     description:
       "Des applications web rapides, évolutives et sécurisées, construites avec des technologies de pointe et les meilleures pratiques d’ingénierie.",
+    deliverables: ["Sites React", "API", "Mise en ligne"],
   },
   {
     number: "05",
     title: "Intégration IA",
     description:
       "Automatisation intelligente, chatbots et fonctionnalités propulsées par l’IA pour enrichir votre produit digital et réduire vos coûts opérationnels.",
+    deliverables: ["Chatbots", "Automatisation", "Intégrations"],
   },
   {
     number: "06",
     title: "Produits digitaux",
     description:
       "Un accompagnement de bout en bout — de la stratégie et du concept au design, au développement, au lancement et à l’amélioration continue.",
+    deliverables: ["Stratégie", "MVP", "Suivi"],
   },
 ];
 
@@ -92,61 +98,33 @@ export default function ServicesSection() {
           </motion.h2>
         </div>
 
-        {/* Service card grid */}
-        <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-          style={{
-            gap: "1px",
-            background: "rgba(169,194,216,0.08)",
-            borderRadius: "20px",
-            overflow: "hidden",
-            border: "1px solid rgba(169,194,216,0.08)",
-          }}
+        {/* Service cards: hovering inverts a card to the light brand blue */}
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
         >
-          {services.map((service, index) => (
-            <motion.div
-              key={service.title}
-              className="relative p-8"
-              style={{ background: "#142638", cursor: "default" }}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.07 }}
-              whileHover={{ background: "#1b3350" }}
-            >
-              <div
-                className="font-unbounded font-bold mb-6"
-                style={{
-                  fontSize: "0.65rem",
-                  color: "#a9c2d8",
-                  opacity: 0.3,
-                  letterSpacing: "0.15em",
-                }}
-              >
-                {service.number}
+          {services.map((service) => (
+            <article key={service.title} className="service-card">
+              <div className="flex items-start justify-between gap-4">
+                <h3 className="service-card-title font-unbounded font-bold">{service.title}</h3>
+                <span className="service-card-number font-unbounded">{service.number}</span>
               </div>
 
-              <h3
-                className="font-unbounded font-bold mb-4"
-                style={{
-                  fontSize: "1.05rem",
-                  color: "#ffffff",
-                  lineHeight: 1.3,
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {service.title}
-              </h3>
-
-              <p
-                className="font-body text-sm leading-relaxed"
-                style={{ color: "rgba(169,194,216,0.55)" }}
-              >
+              <p className="service-card-text font-body text-sm leading-relaxed">
                 {service.description}
               </p>
-            </motion.div>
+
+              <ul className="service-card-deliverables font-body">
+                {service.deliverables.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

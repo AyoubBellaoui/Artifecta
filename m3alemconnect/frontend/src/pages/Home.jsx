@@ -116,7 +116,7 @@ function HeroPanel({ artisans }) {
 }
 
 export default function Home() {
-  const { t, tm, categoryName, cityName } = useI18n();
+  const { t, tm, formatNumber, categoryName, cityName } = useI18n();
   const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
   const [featured, setFeatured] = useState(DEMO_FEATURED);
   const [plans, setPlans] = useState(FALLBACK_PLANS);
@@ -185,14 +185,12 @@ export default function Home() {
         <div className="container-page">
           <div className="grid gap-px overflow-hidden rounded-xl border border-sand-200 bg-sand-200 shadow-raised sm:grid-cols-2 lg:grid-cols-4">
             {tm('home.trust').map((item, index) => (
-              <div key={item.title} className="flex gap-3.5 bg-white p-6">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-saffron-50 text-saffron-700 ring-1 ring-inset ring-saffron-100">
-                  <Icon name={TRUST_ICONS[index]} className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-navy-900">{item.title}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-sand-600">{item.text}</p>
-                </div>
+              <div key={item.title} className="bg-white p-6">
+                <p className="flex items-center gap-2 text-sm font-semibold text-navy-900">
+                  <Icon name={TRUST_ICONS[index]} className="h-4 w-4 shrink-0 text-saffron-600" />
+                  {item.title}
+                </p>
+                <p className="mt-1.5 text-sm leading-relaxed text-sand-600">{item.text}</p>
               </div>
             ))}
           </div>
@@ -216,18 +214,14 @@ export default function Home() {
                 <Link
                   key={category.slug}
                   to={`/artisans?category=${category.slug}`}
-                  className="card group flex items-start gap-4 p-5 transition-all hover:-translate-y-0.5 hover:border-saffron-300 hover:shadow-raised"
+                  className="card group flex flex-col p-5 transition-colors hover:border-saffron-400 hover:bg-saffron-50"
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-saffron-300 transition-colors group-hover:bg-saffron-500 group-hover:text-navy-950">
-                    <CategoryIcon slug={category.slug} className="h-5 w-5" />
+                  <span className="flex items-start justify-between gap-3">
+                    <CategoryIcon slug={category.slug} className="h-7 w-7 text-navy-700 transition-colors group-hover:text-saffron-700" />
+                    {count > 0 && <span className="text-xs font-medium text-sand-500">{t('common.artisans', { count })}</span>}
                   </span>
-                  <span className="min-w-0">
-                    <span className="block font-semibold text-navy-900">{categoryName(category)}</span>
-                    {description && <span className="mt-1 block text-sm leading-snug text-sand-600">{description}</span>}
-                    {count > 0 && (
-                      <span className="mt-3 block text-xs font-medium text-saffron-700">{t('common.artisans', { count })}</span>
-                    )}
-                  </span>
+                  <span className="mt-6 block font-semibold text-navy-900">{categoryName(category)}</span>
+                  {description && <span className="mt-1 block text-sm leading-snug text-sand-600">{description}</span>}
                 </Link>
               );
             })}
@@ -245,12 +239,18 @@ export default function Home() {
             <ArrowLink to="/artisans" className="btn btn-primary mt-8">{t('home.how.cta')}</ArrowLink>
           </div>
           <ol className="grid gap-px overflow-hidden rounded-xl border border-sand-200 bg-sand-200 sm:grid-cols-3 lg:col-span-8">
-            {tm('home.how.steps').map((step, index) => (
+            {tm('home.how.steps').map((step, index, steps) => (
               <li key={step.title} className="bg-white p-6">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-saffron-500 text-sm font-semibold text-navy-950">
-                  {index + 1}
-                </span>
-                <h3 className="mt-6 text-lg font-semibold text-navy-900">{step.title}</h3>
+                {/* Progress through the steps, so the cards read as a sequence */}
+                <div className="flex items-center gap-3">
+                  <bdi dir="ltr" className="text-sm font-semibold text-saffron-700">
+                    {formatNumber(index + 1)}/{formatNumber(steps.length)}
+                  </bdi>
+                  <span className="h-1 flex-1 rounded-full bg-sand-200">
+                    <span className="block h-1 rounded-full bg-saffron-500" style={{ width: `${((index + 1) / steps.length) * 100}%` }} />
+                  </span>
+                </div>
+                <h3 className="mt-5 text-lg font-semibold text-navy-900">{step.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-sand-600">{step.text}</p>
               </li>
             ))}
@@ -280,22 +280,18 @@ export default function Home() {
         <div className="container-page">
           <SectionHeading eyebrow={t('home.testimonials.eyebrow')} title={t('home.testimonials.title')} />
           <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {tm('home.testimonials.items').map((item) => {
-              const [first = '', last = ''] = item.name.split(' ');
-              return (
-                <figure key={item.name} className="card flex flex-col border-t-2 border-t-saffron-500 p-6">
-                  <StarRating rating={5} />
-                  <blockquote className="mt-4 flex-1 text-[15px] leading-relaxed text-navy-900">{item.text}</blockquote>
-                  <figcaption className="mt-6 flex items-center gap-3 border-t border-sand-200 pt-4">
-                    <Avatar size="sm" firstName={first} lastName={last} />
-                    <div>
-                      <p className="text-sm font-semibold text-navy-900">{item.name}</p>
-                      <p className="mt-0.5 text-xs text-sand-600">{categoryName(item.service)} · {item.city}</p>
-                    </div>
-                  </figcaption>
-                </figure>
-              );
-            })}
+            {tm('home.testimonials.items').map((item) => (
+              <figure key={item.name} className="card flex flex-col p-6">
+                <blockquote className="flex-1 text-base leading-relaxed text-navy-900">{item.text}</blockquote>
+                <figcaption className="mt-6 flex items-end justify-between gap-3 border-t border-sand-200 pt-4">
+                  <div>
+                    <p className="text-sm font-semibold text-navy-900">{item.name}</p>
+                    <p className="mt-0.5 text-xs text-sand-600">{categoryName(item.service)} · {item.city}</p>
+                  </div>
+                  <StarRating rating={5} size="xs" />
+                </figcaption>
+              </figure>
+            ))}
           </div>
         </div>
       </section>
@@ -367,7 +363,7 @@ export default function Home() {
                     plan={plan}
                     highlighted={highlighted}
                     action={
-                      <Link to="/register?role=artisan" className={`btn w-full ${highlighted ? 'btn-primary' : 'btn-secondary'}`}>
+                      <Link to="/register?role=artisan" className={`btn w-full ${highlighted ? 'btn-accent' : 'btn-secondary'}`}>
                         {Number(plan.price) === 0
                           ? t('home.plans.ctaFree')
                           : t('home.plans.ctaPaid', { plan: t(`plans.${planKey(plan)}.name`) })}
