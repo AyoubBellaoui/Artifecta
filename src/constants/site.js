@@ -12,28 +12,28 @@ export const navLinks = [
   { href: "#work", label: "Réalisations" },
 ];
 
-// Team photos: put a square picture (about 400×400, face centred) in public/team/ and uncomment the
-// member's `photo` line. Without a photo, or if the file is missing, the card shows the default avatar.
+// Team photos live in public/team/ (square, face centred). Remove a member's `photo` line to show
+// the default avatar instead; a missing file also falls back to it.
 export const teamMembers = [
   {
     name: "Ayoub B.",
     initials: "AB",
     role: "Chef de groupe",
     specialty: "Développement Full Stack",
-    // photo: "/team/ayoub.webp",
+    photo: "/team/ayoub.webp",
   },
   {
     name: "Alaa",
     initials: "AL",
     role: "Développement Frontend",
     specialty: "Design UI/UX",
-    // photo: "/team/alaa.webp",
+    photo: "/team/alaa.webp",
   },
   {
     name: "Abdelwadoud",
     initials: "AW",
     role: "Développement Backend",
-    // photo: "/team/abdelwadoud.webp",
+    photo: "/team/abdelwadoud.webp",
   },
 ];
 

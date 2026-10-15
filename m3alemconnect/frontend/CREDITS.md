@@ -43,6 +43,9 @@ fictional demonstration profiles and are not pictures of the people named in the
 | `public/images/artisans/karim-idrissi.webp` | Emmanuel Ikwuegbu | https://unsplash.com/photos/zWOgsj3j0wA |
 | `public/images/artisans/salma-bennani.webp` | Abdulkadir Hirabe | https://unsplash.com/photos/ICI9aYlnW2I |
 | `public/images/artisans/yassine-kettani.webp` | nana o. | https://unsplash.com/photos/10fvuGtnoEM |
+| `public/images/artisans/portrait-1.webp` | Mohamed Oujeaa | https://unsplash.com/photos/00vkNoL95Cs |
+| `public/images/artisans/portrait-2.webp` | Gilda Gonzàlez | https://unsplash.com/photos/UqHd7ge2kWU |
+| `public/images/artisans/portrait-3.webp` | Wafiq Raza | https://unsplash.com/photos/V6IpBICof4g |
 | `public/images/testimonials/fatima-zahra.webp` | Lisa Marie Theck | https://unsplash.com/photos/6awpFbYse3o |
 | `public/images/testimonials/ahmed.webp` | Jeremiah Del Mar | https://unsplash.com/photos/SGpDDFOvBxk |
 | `public/images/testimonials/nadia.webp` | Levi Meir Clancy | https://unsplash.com/photos/nXsEJAVUgPQ |

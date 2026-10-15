@@ -5,7 +5,6 @@ import { fetchCategories, fetchPlans, searchArtisans } from '../services/data';
 import { useI18n } from '../i18n/I18nProvider';
 import { planKey } from '../i18n/helpers';
 import ArtisanCard from '../components/ArtisanCard';
-import Avatar from '../components/Avatar';
 import Icon, { CategoryIcon } from '../components/Icon';
 import { CountUp, EASE, Marquee, Reveal, staggerDelay } from '../components/motion';
 import PlanCard from '../components/PlanCard';
@@ -83,52 +82,8 @@ function HeroSearch({ categories }) {
   );
 }
 
-function HeroPanel({ artisans }) {
-  const { t, categoryName, cityName } = useI18n();
-
-  return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-pop">
-      <div className="flex items-center justify-between gap-4 border-b border-sand-200 px-5 py-4">
-        <div>
-          <p className="text-sm font-semibold text-navy-900">{t('home.hero.panelTitle')}</p>
-          <p className="mt-0.5 text-xs text-sand-600">{t('home.hero.panelSubtitle')}</p>
-        </div>
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-          <Icon name="shieldCheck" className="h-5 w-5" />
-        </span>
-      </div>
-      <ul className="divide-y divide-sand-200">
-        {artisans.map((artisan) => (
-          <li key={artisan.id}>
-            <Link to={`/artisans/${artisan.id}`} className="flex items-center gap-3.5 px-5 py-4 transition-colors hover:bg-sand-50">
-              <Avatar firstName={artisan.first_name} lastName={artisan.last_name} src={artisan.avatar_url} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-navy-900"><bdi>{artisan.first_name} {artisan.last_name}</bdi></p>
-                <p className="mt-0.5 truncate text-xs text-sand-600">
-                  {[categoryName(artisan), cityName(artisan.city)].filter(Boolean).join(' · ')}
-                </p>
-              </div>
-              <div className="shrink-0 text-end">
-                <StarRating rating={artisan.rating_avg} size="xs" showValue />
-                <p className="mt-1 text-xs text-sand-600">{t('common.reviews', { count: Number(artisan.rating_count) || 0 })}</p>
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
-      <Link
-        to="/artisans"
-        className="flex items-center justify-between border-t border-sand-200 bg-sand-50 px-5 py-3.5 text-sm font-semibold text-navy-800 transition-colors hover:bg-saffron-50 hover:text-navy-900"
-      >
-        {t('home.hero.panelLink')}
-        <Icon name="arrowRight" className="h-4 w-4" flipInRtl />
-      </Link>
-    </div>
-  );
-}
-
-// Photo collage on the right of the hero, with the top-rated artisans floating over its corner.
-function HeroCollage({ artisans }) {
+// Photo collage on the right of the hero.
+function HeroCollage() {
   return (
     <div className="relative">
       <div className="relative h-[280px] sm:h-[400px] lg:h-[540px]">
@@ -150,14 +105,6 @@ function HeroCollage({ artisans }) {
           <img src={HERO_IMAGES.detail} alt="" width={560} height={560} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         </motion.div>
       </div>
-      <motion.div
-        initial={{ opacity: 0, y: 32 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: EASE, delay: 0.4 }}
-        className="relative z-10 mx-3 -mt-16 sm:mx-10 lg:absolute lg:-bottom-12 lg:-start-10 lg:mx-0 lg:mt-0 lg:w-[22rem]"
-      >
-        <HeroPanel artisans={artisans} />
-      </motion.div>
     </div>
   );
 }
@@ -288,7 +235,7 @@ export default function Home() {
           </motion.div>
 
           <div className="lg:col-span-5">
-            <HeroCollage artisans={featured.slice(0, 3)} />
+            <HeroCollage />
           </div>
         </div>
       </section>

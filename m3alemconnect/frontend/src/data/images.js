@@ -40,6 +40,17 @@ export const DEMO_PORTRAITS = Object.fromEntries(
   ].map((name) => [name, `${BASE}/artisans/${name.toLowerCase().replace(/\s+/g, '-')}.webp`]),
 );
 
+// Stand-in portraits for artisans who have not added a photo yet; the same artisan always gets the
+// same one. Used on public listings only, never for the signed-in user's own avatar.
+const FALLBACK_PORTRAITS = [1, 2, 3].map((n) => `${BASE}/artisans/portrait-${n}.webp`);
+
+export function artisanPhoto(artisan) {
+  if (artisan?.avatar_url) return artisan.avatar_url;
+  const key = String(artisan?.id ?? `${artisan?.first_name}${artisan?.last_name}`);
+  const hash = [...key].reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) >>> 0, 7);
+  return FALLBACK_PORTRAITS[hash % FALLBACK_PORTRAITS.length];
+}
+
 export function portfolioImages(slug) {
   const name = CATEGORY_SLUGS.includes(slug) ? slug : 'plomberie';
   return [1, 2, 3].map((n) => `${BASE}/portfolio/${name}-${n}.webp`);

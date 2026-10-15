@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { categoryImage } from '../data/images';
+import { artisanPhoto, categoryImage } from '../data/images';
 import { useI18n } from '../i18n/I18nProvider';
 import Avatar from './Avatar';
 import Icon from './Icon';
@@ -37,7 +37,7 @@ export default function ArtisanCard({ artisan }) {
         <Avatar
           firstName={artisan.first_name}
           lastName={artisan.last_name}
-          src={artisan.avatar_url}
+          src={artisanPhoto(artisan)}
           size="xl"
           className="absolute -bottom-8 end-5 shadow-raised ring-4 ring-white"
         />

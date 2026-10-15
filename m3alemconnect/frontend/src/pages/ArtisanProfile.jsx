@@ -12,7 +12,7 @@ import QuoteModal from '../components/QuoteModal';
 import StarRating, { StarInput } from '../components/StarRating';
 import { EmptyState, PageLoader } from '../components/ui';
 import { getDemoArtisan, isDemoId } from '../data/mockData';
-import { categoryImage } from '../data/images';
+import { artisanPhoto, categoryImage } from '../data/images';
 
 function ProfileSection({ title, count, action, children }) {
   const { formatNumber } = useI18n();
@@ -205,7 +205,7 @@ export default function ArtisanProfile() {
                 size="2xl"
                 firstName={artisan.first_name}
                 lastName={artisan.last_name}
-                src={artisan.avatar_url}
+                src={artisanPhoto(artisan)}
                 className="relative -mt-14 shadow-raised ring-4 ring-white sm:-mt-16"
               />
               <div className="min-w-0 sm:pt-5">
