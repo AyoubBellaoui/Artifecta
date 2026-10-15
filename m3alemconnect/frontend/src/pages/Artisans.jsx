@@ -50,7 +50,7 @@ function ResultsSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="card overflow-hidden">
           <div className="skeleton h-28 rounded-none" />
-          <div className="flex justify-between gap-4 p-5 pe-24">
+          <div className="flex justify-between gap-4 px-5 pb-5 pt-11">
             <div className="flex-1 space-y-2.5">
               <div className="skeleton h-4 w-2/3" />
               <div className="skeleton h-3 w-1/3" />

@@ -43,7 +43,8 @@ export default function ArtisanCard({ artisan }) {
         />
       </div>
 
-      <div className="flex items-start justify-between gap-4 p-5 pe-24">
+      {/* Top padding clears the avatar that overlaps the cover, so the name can use the full width. */}
+      <div className="flex items-start justify-between gap-4 px-5 pb-5 pt-11">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <h3 className="truncate text-lg font-semibold text-navy-900">
