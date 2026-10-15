@@ -85,9 +85,9 @@ const fr = {
       subtitle:
         'Comparez des professionnels vérifiés, lisez les avis de vrais clients et demandez un devis gratuit en quelques minutes.',
       stats: [
-        { value: '4,8/5', label: 'Note moyenne' },
-        { value: '1 200+', label: 'Artisans inscrits' },
-        { value: '12', label: 'Villes couvertes' },
+        { value: '4,8/5', count: 4.8, decimals: 1, suffix: '/5', label: 'Note moyenne' },
+        { value: '1 200+', count: 1200, suffix: '+', label: 'Artisans inscrits' },
+        { value: '12', count: 12, label: 'Villes couvertes' },
       ],
       service: 'Service',
       allServices: 'Tous les services',

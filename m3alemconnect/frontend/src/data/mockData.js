@@ -1,4 +1,5 @@
 import { normalizeKey } from '../i18n/helpers';
+import { DEMO_PORTRAITS, portfolioImages } from './images';
 
 // Used when Supabase is unreachable or still empty, so the concept can be presented anywhere.
 
@@ -215,6 +216,59 @@ function demoReviews(index) {
   });
 }
 
+// Captions for the sample portfolio photos, in the order of portfolioImages(slug).
+const PORTFOLIO_CAPTIONS = {
+  plomberie: [
+    { fr: 'Salle de bain rénovée', ar: 'تجديد حمام' },
+    { fr: 'Robinetterie de cuisine', ar: 'صنابير المطبخ' },
+    { fr: 'Remplacement de mitigeur', ar: 'تغيير خلاط الماء' },
+  ],
+  electricite: [
+    { fr: 'Tableau électrique mis aux normes', ar: 'لوحة كهربائية مطابقة للمعايير' },
+    { fr: 'Contrôle d’une installation', ar: 'فحص تركيب كهربائي' },
+    { fr: 'Raccordement d’un coffret', ar: 'توصيل علبة كهربائية' },
+  ],
+  menuiserie: [
+    { fr: 'Porte en cèdre sculpté', ar: 'باب من خشب الأرز المنقوش' },
+    { fr: 'Ponçage d’un plateau en bois', ar: 'صنفرة سطح خشبي' },
+    { fr: 'Assemblage sur mesure', ar: 'تجميع حسب الطلب' },
+  ],
+  peinture: [
+    { fr: 'Salon repeint', ar: 'إعادة صباغة صالون' },
+    { fr: 'Façade extérieure', ar: 'واجهة خارجية' },
+    { fr: 'Mur d’accent jaune', ar: 'جدار بلون أصفر' },
+  ],
+  maconnerie: [
+    { fr: 'Mur en parpaings', ar: 'جدار من الطوب الإسمنتي' },
+    { fr: 'Cloison intérieure', ar: 'حاجز داخلي' },
+    { fr: 'Restauration d’une coupole', ar: 'ترميم قبة' },
+  ],
+  reparation: [
+    { fr: 'Lave-linge remis en service', ar: 'إصلاح غسالة ملابس' },
+    { fr: 'Réparation de carte électronique', ar: 'إصلاح لوحة إلكترونية' },
+    { fr: 'Entretien de climatiseurs', ar: 'صيانة المكيفات' },
+  ],
+  demenagement: [
+    { fr: 'Emménagement d’une famille', ar: 'انتقال عائلة إلى منزل جديد' },
+    { fr: 'Cartons prêts au transport', ar: 'صناديق جاهزة للنقل' },
+    { fr: 'Livraison à domicile', ar: 'التوصيل إلى المنزل' },
+  ],
+  nettoyage: [
+    { fr: 'Salon après nettoyage', ar: 'صالون بعد التنظيف' },
+    { fr: 'Nettoyage des sols', ar: 'تنظيف الأرضيات' },
+    { fr: 'Shampooing de canapé', ar: 'تنظيف الأرائك' },
+  ],
+};
+
+// Same shape as the photos returned by the database (see withPhotoUrl in services/data.js).
+function demoPhotos(slug, index) {
+  return portfolioImages(slug).map((photo_url, i) => ({
+    id: `demo-photo-${index}-${i}`,
+    photo_url,
+    caption: PORTFOLIO_CAPTIONS[slug]?.[i] || '',
+  }));
+}
+
 const ARTISANS = [
   {
     first_name: 'Khalid', last_name: 'Benmoussa', city: 'Casablanca', category_slug: 'plomberie',
@@ -394,8 +448,9 @@ export const DEMO_ARTISANS = ARTISANS.map((artisan, index) => {
     category_id: category.id,
     category_name_fr: category.name_fr,
     category_name_ar: category.name_ar,
+    avatar_url: DEMO_PORTRAITS[`${artisan.first_name} ${artisan.last_name}`] || null,
     reviews: demoReviews(index),
-    photos: [],
+    photos: demoPhotos(artisan.category_slug, index),
     isDemo: true,
   };
 });

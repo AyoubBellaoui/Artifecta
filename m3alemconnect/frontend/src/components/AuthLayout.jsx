@@ -1,5 +1,7 @@
+import { AUTH_IMAGE } from '../data/images';
 import { useI18n } from '../i18n/I18nProvider';
 import Icon from './Icon';
+import { Reveal } from './motion';
 import ZelligePattern from './ZelligePattern';
 
 export default function AuthLayout({ title, subtitle, footer, children }) {
@@ -7,7 +9,7 @@ export default function AuthLayout({ title, subtitle, footer, children }) {
 
   return (
     <div className="container-page py-10 sm:py-14">
-      <div className="mx-auto grid max-w-5xl overflow-hidden rounded-xl border border-sand-200 bg-white shadow-card lg:grid-cols-[minmax(0,1fr)_minmax(0,0.78fr)]">
+      <Reveal y={16} amount={0} className="mx-auto grid max-w-5xl overflow-hidden rounded-xl border border-sand-200 bg-white shadow-card lg:grid-cols-[minmax(0,1fr)_minmax(0,0.78fr)]">
         <div className="p-6 sm:p-10">
           <h1 className="text-2xl font-semibold tracking-tight text-navy-900 sm:text-[28px]">{title}</h1>
           {subtitle && <p className="mt-1.5 text-sand-600">{subtitle}</p>}
@@ -17,7 +19,18 @@ export default function AuthLayout({ title, subtitle, footer, children }) {
 
         {/* Side panel: stays in view while a long form scrolls. */}
         <aside className="relative hidden overflow-hidden bg-navy-900 text-white lg:block">
-          <ZelligePattern className="text-white/[0.06]" />
+          {/* Lazy: the panel is hidden below lg, so phones never download the photo. */}
+          <img
+            src={AUTH_IMAGE}
+            alt=""
+            width={960}
+            height={1280}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy-900/70 via-navy-900/75 to-navy-950/95" aria-hidden="true" />
+          <ZelligePattern className="text-white/[0.05]" />
           <div className="absolute inset-y-0 start-0 w-px bg-saffron-500/40" aria-hidden="true" />
 
           <div className="sticky top-20 flex flex-col gap-8 p-10">
@@ -53,7 +66,7 @@ export default function AuthLayout({ title, subtitle, footer, children }) {
             <p className="border-t border-white/10 pt-5 text-sm text-navy-300">{t('brand.tagline')}</p>
           </div>
         </aside>
-      </div>
+      </Reveal>
     </div>
   );
 }

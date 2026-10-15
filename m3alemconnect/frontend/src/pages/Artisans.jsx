@@ -4,9 +4,11 @@ import { fetchCategories, searchArtisans } from '../services/data';
 import { useI18n } from '../i18n/I18nProvider';
 import ArtisanCard from '../components/ArtisanCard';
 import Icon, { CategoryIcon } from '../components/Icon';
+import { Reveal, staggerDelay } from '../components/motion';
 import ZelligePattern from '../components/ZelligePattern';
 import { EmptyState, Notice } from '../components/ui';
 import { CITIES, FALLBACK_CATEGORIES, filterDemoArtisans } from '../data/mockData';
+import { categoryImage } from '../data/images';
 
 const PAGE_SIZE = 12;
 
@@ -47,13 +49,12 @@ function ResultsSkeleton() {
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-hidden="true">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="card overflow-hidden">
-          <div className="flex justify-between gap-4 p-5">
+          <div className="skeleton h-28 rounded-none" />
+          <div className="flex justify-between gap-4 p-5 pe-24">
             <div className="flex-1 space-y-2.5">
-              <div className="skeleton h-2.5 w-1/4" />
               <div className="skeleton h-4 w-2/3" />
               <div className="skeleton h-3 w-1/3" />
             </div>
-            <div className="skeleton h-12 w-12" />
           </div>
           <div className="flex items-end justify-between gap-4 px-5 pb-5">
             <div className="skeleton h-6 w-24" />
@@ -164,6 +165,18 @@ export default function Artisans() {
     <>
       {/* Search header, in the same navy band as the home page hero */}
       <div className="relative overflow-hidden bg-navy-900">
+        {/* The chosen trade's photo, faded behind the header */}
+        {category && (
+          <img
+            key={category}
+            src={categoryImage(category, 'wide')}
+            alt=""
+            width={1600}
+            height={500}
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover opacity-25"
+          />
+        )}
         <ZelligePattern className="text-white/[0.07] [mask-image:linear-gradient(to_left,#000_10%,transparent_70%)] rtl:[mask-image:linear-gradient(to_right,#000_10%,transparent_70%)]" />
         <div className="absolute inset-x-0 top-0 h-1 bg-saffron-500" aria-hidden="true" />
 
@@ -337,8 +350,10 @@ export default function Artisans() {
                   className={`grid gap-4 transition-opacity sm:grid-cols-2 xl:grid-cols-3 ${loading ? 'opacity-60' : ''}`}
                   aria-busy={loading}
                 >
-                  {result.artisans.map((artisan) => (
-                    <ArtisanCard key={artisan.id} artisan={artisan} />
+                  {result.artisans.map((artisan, index) => (
+                    <Reveal key={artisan.id} delay={staggerDelay(index % 3)} className="grid">
+                      <ArtisanCard artisan={artisan} />
+                    </Reveal>
                   ))}
                 </div>
 

@@ -7,15 +7,17 @@ import { useI18n } from '../i18n/I18nProvider';
 import { errorMessage } from '../i18n/helpers';
 import Avatar from '../components/Avatar';
 import Icon from '../components/Icon';
+import { Reveal } from '../components/motion';
 import QuoteModal from '../components/QuoteModal';
 import StarRating, { StarInput } from '../components/StarRating';
 import { EmptyState, PageLoader } from '../components/ui';
 import { getDemoArtisan, isDemoId } from '../data/mockData';
+import { categoryImage } from '../data/images';
 
 function ProfileSection({ title, count, action, children }) {
   const { formatNumber } = useI18n();
   return (
-    <section className="card p-6">
+    <Reveal as="section" className="card p-6">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-navy-900">
           {title}
@@ -24,7 +26,7 @@ function ProfileSection({ title, count, action, children }) {
         {action}
       </div>
       {children}
-    </section>
+    </Reveal>
   );
 }
 
@@ -174,20 +176,39 @@ export default function ArtisanProfile() {
 
   return (
     <>
-      <div className="border-b border-sand-200 bg-white">
-        <div className="container-page py-6 sm:py-8">
-          <div className="flex flex-wrap items-center gap-3">
-            <Link to="/artisans" className="inline-flex items-center gap-1.5 text-sm font-medium text-sand-600 hover:text-navy-900">
-              <Icon name="arrowLeft" className="h-4 w-4" flipInRtl />
-              {t('profile.back')}
-            </Link>
-            {artisan.isDemo && <span className="chip-neutral">{t('profile.demoNotice')}</span>}
-          </div>
+      {/* Trade banner */}
+      <div className="relative h-36 overflow-hidden bg-navy-900 sm:h-48 lg:h-56">
+        <img
+          src={categoryImage(artisan.category_slug, 'wide')}
+          alt=""
+          width={1600}
+          height={500}
+          fetchpriority="high"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-navy-950/60 via-navy-950/15 to-navy-950/50" />
+        <div className="container-page absolute inset-x-0 top-0 flex flex-wrap items-center gap-3 py-5">
+          <Link to="/artisans" className="inline-flex items-center gap-1.5 text-sm font-medium text-white/90 hover:text-white">
+            <Icon name="arrowLeft" className="h-4 w-4" flipInRtl />
+            {t('profile.back')}
+          </Link>
+          {artisan.isDemo && <span className="chip bg-white/90 text-sand-700">{t('profile.demoNotice')}</span>}
+        </div>
+      </div>
 
-          <div className="mt-6 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-            <div className="flex items-start gap-5">
-              <Avatar size="lg" firstName={artisan.first_name} lastName={artisan.last_name} src={artisan.avatar_url} />
-              <div className="min-w-0">
+      <div className="border-b border-sand-200 bg-white">
+        <div className="container-page pb-6 sm:pb-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
+              <Avatar
+                size="2xl"
+                firstName={artisan.first_name}
+                lastName={artisan.last_name}
+                src={artisan.avatar_url}
+                className="relative -mt-14 shadow-raised ring-4 ring-white sm:-mt-16"
+              />
+              <div className="min-w-0 sm:pt-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl font-semibold tracking-tight text-navy-900 sm:text-3xl">{fullName}</h1>
                   {artisan.is_verified && (
@@ -219,7 +240,7 @@ export default function ArtisanProfile() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 md:justify-end">
+            <div className="flex flex-wrap gap-2 md:justify-end md:pt-5">
               <button type="button" onClick={() => setShowQuote(true)} className="btn btn-primary btn-lg">
                 <Icon name="file" className="h-4 w-4" />
                 {t('profile.requestQuote')}
@@ -256,12 +277,26 @@ export default function ArtisanProfile() {
           {photos.length > 0 && (
             <ProfileSection title={t('profile.portfolio')}>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {photos.map((photo) => (
-                  <figure key={photo.id} className="overflow-hidden rounded-md border border-sand-200 bg-sand-100">
-                    <img src={photo.photo_url} alt={photo.caption || ''} loading="lazy" className="aspect-[4/3] w-full object-cover" />
-                    {photo.caption && <figcaption dir="auto" className="px-3 py-2 text-xs text-sand-600">{photo.caption}</figcaption>}
-                  </figure>
-                ))}
+                {photos.map((photo) => {
+                  // Demo captions are { fr, ar }; database captions are plain strings.
+                  const caption = pick(photo.caption);
+                  return (
+                    <figure key={photo.id} className="group overflow-hidden rounded-md border border-sand-200 bg-sand-100">
+                      <div className="overflow-hidden">
+                        <img
+                          src={photo.photo_url}
+                          alt={caption || ''}
+                          width={800}
+                          height={600}
+                          loading="lazy"
+                          decoding="async"
+                          className="img-zoom aspect-[4/3] w-full object-cover"
+                        />
+                      </div>
+                      {caption && <figcaption dir="auto" className="px-3 py-2 text-xs text-sand-600">{caption}</figcaption>}
+                    </figure>
+                  );
+                })}
               </div>
             </ProfileSection>
           )}

@@ -155,4 +155,46 @@
   .skeleton {
     @apply animate-pulse rounded bg-sand-200;
   }
+
+  /* Photos */
+  .img-zoom {
+    @apply transition-transform duration-500 motion-safe:group-hover:scale-105;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .photo-scrim {
+    @apply pointer-events-none absolute inset-0 bg-gradient-to-t from-navy-950/90 via-navy-950/40 to-navy-950/5;
+  }
+
+  /* Endless ticker: two identical copies slide by their own width. */
+  .marquee {
+    @apply flex overflow-hidden;
+  }
+  .marquee-copy {
+    animation: marquee var(--marquee-duration, 40s) linear infinite;
+  }
+  [dir='rtl'] .marquee-copy {
+    animation-name: marquee-rtl;
+  }
+  .marquee:hover .marquee-copy {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes marquee-rtl {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-copy,
+  [dir='rtl'] .marquee-copy {
+    animation: none;
+  }
 }

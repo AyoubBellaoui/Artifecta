@@ -1,17 +1,18 @@
 import { useI18n } from '../i18n/I18nProvider';
 import Icon from './Icon';
+import { Reveal } from './motion';
 
 export function SectionHeading({ eyebrow, title, subtitle, action, tone = 'default', className = '' }) {
   const onDark = tone === 'dark';
   return (
-    <div className={`flex flex-col gap-5 md:flex-row md:items-end md:justify-between ${className}`}>
+    <Reveal className={`flex flex-col gap-5 md:flex-row md:items-end md:justify-between ${className}`}>
       <div className="max-w-2xl">
         {eyebrow && <p className={onDark ? 'eyebrow text-saffron-300' : 'eyebrow'}>{eyebrow}</p>}
         <h2 className={`heading-section mt-3 ${onDark ? 'text-white' : ''}`}>{title}</h2>
         {subtitle && <p className={`mt-3 text-base leading-relaxed ${onDark ? 'text-navy-200' : 'text-sand-600'}`}>{subtitle}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
-    </div>
+    </Reveal>
   );
 }
 

@@ -229,3 +229,170 @@ body {
     grid-column: auto;
   }
 }
+
+/* Service card icon tile: inverts together with the card on hover */
+.service-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid rgba(169, 194, 216, 0.25);
+  background: rgba(169, 194, 216, 0.06);
+  color: #a9c2d8;
+  transition: color 0.35s ease, background 0.35s ease, border-color 0.35s ease;
+}
+
+.service-card-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.service-card:hover .service-card-icon {
+  background: #142638;
+  border-color: #142638;
+}
+
+/* Hero call-to-action buttons */
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 26px;
+  border-radius: 999px;
+  font-family: "Unbounded", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hero-cta:hover {
+  transform: translateY(-2px);
+}
+
+.hero-cta-primary {
+  background: #142638;
+  color: #ffffff;
+  box-shadow: 0 12px 30px -12px rgba(20, 38, 56, 0.7);
+}
+
+.hero-cta-primary:hover {
+  background: #1b3350;
+}
+
+.hero-cta-secondary {
+  background: rgba(255, 255, 255, 0.6);
+  color: #142638;
+  border: 1px solid rgba(20, 38, 56, 0.15);
+  backdrop-filter: blur(8px);
+}
+
+.hero-cta-secondary:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* Scroll hint under the hero: a mouse outline with a moving wheel */
+.scroll-hint {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #142638;
+  text-decoration: none;
+  font-family: "Unbounded", sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  transition: opacity 0.25s ease;
+}
+
+.scroll-hint:hover {
+  opacity: 1;
+}
+
+.scroll-hint-mouse {
+  display: flex;
+  justify-content: center;
+  width: 26px;
+  height: 40px;
+  padding-top: 7px;
+  border: 2px solid currentColor;
+  border-radius: 14px;
+}
+
+.scroll-hint-wheel {
+  width: 4px;
+  height: 8px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+/* Technology band: two identical lists slide by their own width, so the loop never jumps */
+.marquee {
+  display: flex;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+
+.marquee-copy {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: marquee var(--marquee-duration, 40s) linear infinite;
+}
+
+.marquee:hover .marquee-copy {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.tech-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 56px;
+  color: #a9c2d8;
+  opacity: 0.65;
+  white-space: nowrap;
+  transition: opacity 0.25s ease, color 0.25s ease;
+}
+
+.tech-item:hover {
+  opacity: 1;
+  color: #ffffff;
+}
+
+.tech-item svg {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  fill: currentColor;
+}
+
+.tech-item span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body {
+    scroll-behavior: auto;
+  }
+
+  .marquee-copy {
+    animation: none;
+  }
+}

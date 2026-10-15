@@ -1,20 +1,32 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { fetchCategories, fetchPlans, searchArtisans } from '../services/data';
 import { useI18n } from '../i18n/I18nProvider';
 import { planKey } from '../i18n/helpers';
 import ArtisanCard from '../components/ArtisanCard';
 import Avatar from '../components/Avatar';
 import Icon, { CategoryIcon } from '../components/Icon';
+import { CountUp, EASE, Marquee, Reveal, staggerDelay } from '../components/motion';
 import PlanCard from '../components/PlanCard';
 import StarRating from '../components/StarRating';
 import { SectionHeading } from '../components/ui';
 import ZelligePattern from '../components/ZelligePattern';
 import { CITIES, CITY_STATS, FALLBACK_CATEGORIES, FALLBACK_PLANS, filterDemoArtisans } from '../data/mockData';
+import { DEMO_PORTRAITS, HERO_IMAGES, TESTIMONIAL_AVATARS, categoryImage, cityImage } from '../data/images';
 
 const TRUST_ICONS = ['shieldCheck', 'star', 'file', 'mapPin'];
+const HOW_ICONS = ['search', 'users', 'file'];
 const POPULAR_CATEGORIES = ['plomberie', 'electricite', 'peinture', 'nettoyage'];
 const DEMO_FEATURED = filterDemoArtisans({ sort: 'rating' }).slice(0, 6);
+const HOW_FACES = Object.values(DEMO_PORTRAITS).slice(0, 3);
+
+// Hero entrance: the text column's children rise in one after the other on page load.
+const HERO_TEXT = { show: { transition: { staggerChildren: 0.08 } } };
+const HERO_ITEM = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
+};
 
 function ArrowLink({ to, children, className = 'btn btn-secondary' }) {
   return (
@@ -115,8 +127,83 @@ function HeroPanel({ artisans }) {
   );
 }
 
+// Photo collage on the right of the hero, with the top-rated artisans floating over its corner.
+function HeroCollage({ artisans }) {
+  return (
+    <div className="relative">
+      <div className="relative h-[280px] sm:h-[400px] lg:h-[540px]">
+        <motion.div
+          initial={{ opacity: 0, scale: 1.04 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="absolute inset-y-0 end-0 w-full overflow-hidden rounded-2xl bg-navy-800 sm:w-[82%]"
+        >
+          <img src={HERO_IMAGES.main} alt="" width={960} height={1200} fetchpriority="high" decoding="async" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-950/60 via-transparent to-transparent" />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: EASE, delay: 0.25 }}
+          className="absolute start-0 top-8 hidden aspect-square w-[34%] overflow-hidden rounded-xl bg-navy-800 shadow-pop ring-4 ring-navy-900 sm:block"
+        >
+          <img src={HERO_IMAGES.detail} alt="" width={560} height={560} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+        </motion.div>
+      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 32 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: EASE, delay: 0.4 }}
+        className="relative z-10 mx-3 -mt-16 sm:mx-10 lg:absolute lg:-bottom-12 lg:-start-10 lg:mx-0 lg:mt-0 lg:w-[22rem]"
+      >
+        <HeroPanel artisans={artisans} />
+      </motion.div>
+    </div>
+  );
+}
+
+// Small picture under each "how it works" step, showing what the step looks like in the app.
+function HowIllustration({ index }) {
+  const { t, categoryName, cityName } = useI18n();
+
+  if (index === 0) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg bg-white px-3 py-2.5 text-xs shadow-card ring-1 ring-sand-200">
+        <Icon name="search" className="h-3.5 w-3.5 text-sand-500" />
+        <span className="truncate font-medium text-navy-900">{categoryName('plomberie')}</span>
+        <span className="text-sand-400">·</span>
+        <span className="truncate text-sand-600">{cityName('Casablanca')}</span>
+        <span className="ms-auto flex h-5 w-5 shrink-0 items-center justify-center rounded bg-saffron-500 text-navy-950">
+          <Icon name="arrowRight" className="h-3 w-3" strokeWidth={2.5} flipInRtl />
+        </span>
+      </div>
+    );
+  }
+  if (index === 1) {
+    return (
+      <div className="flex items-center justify-center gap-3 rounded-lg bg-white px-3 py-2 shadow-card ring-1 ring-sand-200">
+        <div className="flex -space-x-2.5 rtl:space-x-reverse">
+          {HOW_FACES.map((src) => (
+            <img key={src} src={src} alt="" width={32} height={32} loading="lazy" decoding="async" className="h-8 w-8 rounded-full object-cover ring-2 ring-white" />
+          ))}
+        </div>
+        <StarRating rating={4.9} size="xs" showValue />
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 rounded-lg bg-white px-3 py-2.5 text-xs shadow-card ring-1 ring-sand-200">
+      <Icon name="file" className="h-4 w-4 text-navy-700" />
+      <span className="flex-1 truncate text-start font-medium text-navy-900">{t('profile.requestQuote')}</span>
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+        <Icon name="check" className="h-3 w-3" strokeWidth={3} />
+      </span>
+    </div>
+  );
+}
+
 export default function Home() {
-  const { t, tm, formatNumber, categoryName, cityName } = useI18n();
+  const { t, tm, lang, formatNumber, categoryName, cityName } = useI18n();
   const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
   const [featured, setFeatured] = useState(DEMO_FEATURED);
   const [plans, setPlans] = useState(FALLBACK_PLANS);
@@ -128,6 +215,15 @@ export default function Home() {
     fetchPlans().then((rows) => { if (rows?.length) setPlans(rows); }).catch(() => {});
   }, []);
 
+  // Ticker content: each trade followed by a city.
+  const tickerItems = categories.flatMap((category, index) => {
+    const city = CITY_STATS[index % CITY_STATS.length].name;
+    return [
+      { key: `trade-${category.slug}`, icon: <CategoryIcon slug={category.slug} className="h-5 w-5 text-saffron-600" />, label: categoryName(category) },
+      { key: `city-${city}`, icon: <Icon name="mapPin" className="h-4 w-4 text-navy-400" />, label: cityName(city) },
+    ];
+  });
+
   return (
     <>
       {/* Hero */}
@@ -135,21 +231,23 @@ export default function Home() {
         <ZelligePattern className="text-white/[0.07] [mask-image:linear-gradient(to_left,#000_10%,transparent_65%)] rtl:[mask-image:linear-gradient(to_right,#000_10%,transparent_65%)]" />
         <div className="absolute inset-x-0 top-0 h-1 bg-saffron-500" aria-hidden="true" />
 
-        <div className="container-page relative grid gap-12 pb-28 pt-14 lg:grid-cols-12 lg:items-center lg:gap-12 lg:pb-36 lg:pt-20">
-          <div className="lg:col-span-7">
-            <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.1em] text-saffron-300">
+        <div className="container-page relative grid grid-cols-1 gap-12 pb-28 pt-14 lg:grid-cols-12 lg:items-center lg:gap-12 lg:pb-36 lg:pt-20">
+          <motion.div className="lg:col-span-7" variants={HERO_TEXT} initial="hidden" animate="show">
+            <motion.p variants={HERO_ITEM} className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.1em] text-saffron-300">
               <span className="h-px w-8 bg-saffron-400" aria-hidden="true" />
               {t('home.hero.eyebrow')}
-            </p>
-            <h1 className="mt-5 max-w-2xl text-[40px] font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[58px]">
+            </motion.p>
+            <motion.h1 variants={HERO_ITEM} className="mt-5 max-w-2xl text-[40px] font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[58px]">
               {t('home.hero.titleLead')}{' '}
               <span className="text-saffron-400 sm:block">{t('home.hero.titleHighlight')}</span>
-            </h1>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-navy-100">{t('home.hero.subtitle')}</p>
+            </motion.h1>
+            <motion.p variants={HERO_ITEM} className="mt-5 max-w-xl text-lg leading-relaxed text-navy-100">{t('home.hero.subtitle')}</motion.p>
 
-            <HeroSearch categories={categories} />
+            <motion.div variants={HERO_ITEM}>
+              <HeroSearch categories={categories} />
+            </motion.div>
 
-            <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
+            <motion.div variants={HERO_ITEM} className="mt-5 flex flex-wrap items-center gap-2 text-sm">
               <span className="me-1 text-navy-200">{t('home.hero.popular')}</span>
               {POPULAR_CATEGORIES.map((slug) => (
                 <Link
@@ -160,22 +258,37 @@ export default function Home() {
                   {categoryName(slug)}
                 </Link>
               ))}
-            </div>
+            </motion.div>
 
-            <dl className="mt-10 grid max-w-lg grid-cols-3 divide-x divide-white/10 border-t border-white/10 pt-6 rtl:divide-x-reverse">
+            <motion.dl variants={HERO_ITEM} className="mt-10 grid max-w-lg grid-cols-3 divide-x divide-white/10 border-t border-white/10 pt-6 rtl:divide-x-reverse">
               {tm('home.hero.stats').map((stat) => (
                 <div key={stat.label} className="flex flex-col-reverse justify-end px-4 first:ps-0 last:pe-0">
                   <dt className="mt-1 text-xs leading-snug text-navy-200 sm:text-sm">{stat.label}</dt>
                   <dd className="text-2xl font-semibold tracking-tight text-white">
-                    <bdi dir="ltr">{stat.value}</bdi>
+                    <bdi dir="ltr">
+                      {stat.count != null ? (
+                        <CountUp
+                          to={stat.count}
+                          delay={0.6}
+                          format={(n) => {
+                            const digits = { minimumFractionDigits: stat.decimals || 0, maximumFractionDigits: stat.decimals || 0 };
+                            // fr-FR groups thousands with a space, like the dictionary text ("1 200+").
+                            const text = lang === 'fr' ? new Intl.NumberFormat('fr-FR', digits).format(n) : formatNumber(n, digits);
+                            return text + (stat.suffix || '');
+                          }}
+                        />
+                      ) : (
+                        stat.value
+                      )}
+                    </bdi>
                   </dd>
                 </div>
               ))}
-            </dl>
-          </div>
+            </motion.dl>
+          </motion.div>
 
           <div className="lg:col-span-5">
-            <HeroPanel artisans={featured.slice(0, 3)} />
+            <HeroCollage artisans={featured.slice(0, 3)} />
           </div>
         </div>
       </section>
@@ -197,6 +310,19 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Trades and cities ticker (decorative: the same links exist below) */}
+      <section aria-hidden="true" className="mt-12 border-y border-sand-200 bg-white py-4">
+        <Marquee duration={50} className="[mask-image:linear-gradient(to_right,transparent,#000_8%,#000_92%,transparent)]">
+          {tickerItems.map((item) => (
+            <li key={item.key} className="flex shrink-0 items-center gap-2.5 pe-10 text-sm font-medium text-navy-800">
+              {item.icon}
+              <span className="whitespace-nowrap">{item.label}</span>
+              <span className="ms-8 h-1.5 w-1.5 rounded-full bg-saffron-400" />
+            </li>
+          ))}
+        </Marquee>
+      </section>
+
       {/* Categories */}
       <section className="py-16 sm:py-20">
         <div className="container-page">
@@ -206,23 +332,45 @@ export default function Home() {
             subtitle={t('home.categories.subtitle')}
             action={<ArrowLink to="/artisans">{t('home.categories.all')}</ArrowLink>}
           />
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map((category) => {
+          <div className="mt-10 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {categories.map((category, index) => {
               const description = tm(`categories.${category.slug}.desc`);
               const count = Number(category.artisan_count) || 0;
               return (
-                <Link
-                  key={category.slug}
-                  to={`/artisans?category=${category.slug}`}
-                  className="card group flex flex-col p-5 transition-colors hover:border-saffron-400 hover:bg-saffron-50"
-                >
-                  <span className="flex items-start justify-between gap-3">
-                    <CategoryIcon slug={category.slug} className="h-7 w-7 text-navy-700 transition-colors group-hover:text-saffron-700" />
-                    {count > 0 && <span className="text-xs font-medium text-sand-500">{t('common.artisans', { count })}</span>}
-                  </span>
-                  <span className="mt-6 block font-semibold text-navy-900">{categoryName(category)}</span>
-                  {description && <span className="mt-1 block text-sm leading-snug text-sand-600">{description}</span>}
-                </Link>
+                <Reveal key={category.slug} delay={staggerDelay(index % 4)}>
+                  <Link
+                    to={`/artisans?category=${category.slug}`}
+                    className="group relative isolate flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-xl bg-navy-800 p-4 text-white shadow-card transition-shadow duration-300 hover:shadow-pop focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron-500 focus-visible:ring-offset-2 sm:aspect-[4/3] sm:p-5"
+                  >
+                    <img
+                      src={categoryImage(category.slug)}
+                      alt=""
+                      width={800}
+                      height={600}
+                      loading="lazy"
+                      decoding="async"
+                      className="img-zoom absolute inset-0 -z-10 h-full w-full object-cover"
+                    />
+                    <span className="photo-scrim -z-10" />
+                    {count > 0 && (
+                      <span className="absolute end-3 top-3 rounded-full bg-navy-950/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                        {t('common.artisans', { count })}
+                      </span>
+                    )}
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-saffron-500 text-navy-950 shadow-raised">
+                      <CategoryIcon slug={category.slug} className="h-5 w-5" />
+                    </span>
+                    <span className="mt-3 flex items-center gap-1.5 text-base font-semibold sm:text-lg">
+                      {categoryName(category)}
+                      <Icon
+                        name="arrowRight"
+                        className="h-4 w-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                        flipInRtl
+                      />
+                    </span>
+                    {description && <span className="mt-1 hidden text-sm leading-snug text-white/85 sm:line-clamp-2">{description}</span>}
+                  </Link>
+                </Reveal>
               );
             })}
           </div>
@@ -231,30 +379,42 @@ export default function Home() {
 
       {/* How it works */}
       <section className="border-y border-sand-200 bg-white py-16 sm:py-20">
-        <div className="container-page grid gap-12 lg:grid-cols-12">
-          <div className="lg:col-span-4">
+        <div className="container-page grid gap-12 lg:grid-cols-12 lg:items-center">
+          <Reveal className="lg:col-span-4">
             <p className="eyebrow">{t('home.how.eyebrow')}</p>
             <h2 className="heading-section mt-3">{t('home.how.title')}</h2>
             <p className="lead mt-3">{t('home.how.subtitle')}</p>
             <ArrowLink to="/artisans" className="btn btn-primary mt-8">{t('home.how.cta')}</ArrowLink>
-          </div>
-          <ol className="grid gap-px overflow-hidden rounded-xl border border-sand-200 bg-sand-200 sm:grid-cols-3 lg:col-span-8">
-            {tm('home.how.steps').map((step, index, steps) => (
-              <li key={step.title} className="bg-white p-6">
-                {/* Progress through the steps, so the cards read as a sequence */}
-                <div className="flex items-center gap-3">
-                  <bdi dir="ltr" className="text-sm font-semibold text-saffron-700">
-                    {formatNumber(index + 1)}/{formatNumber(steps.length)}
-                  </bdi>
-                  <span className="h-1 flex-1 rounded-full bg-sand-200">
-                    <span className="block h-1 rounded-full bg-saffron-500" style={{ width: `${((index + 1) / steps.length) * 100}%` }} />
+          </Reveal>
+          <div className="relative lg:col-span-8">
+            {/* Line joining the three steps; it draws itself in the reading direction. */}
+            <div aria-hidden="true" className="absolute inset-x-[16.66%] top-8 hidden h-0.5 bg-sand-200 sm:block">
+              <motion.span
+                className="block h-full origin-left bg-saffron-500 rtl:origin-right"
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true, amount: 0.6 }}
+                transition={{ duration: 1.4, ease: EASE, delay: 0.2 }}
+              />
+            </div>
+            <ol className="relative grid gap-10 sm:grid-cols-3 sm:gap-6">
+              {tm('home.how.steps').map((step, index) => (
+                <Reveal as="li" key={step.title} delay={0.15 + index * 0.3} className="flex flex-col items-center text-center">
+                  <span className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-navy-900 text-saffron-400 shadow-raised ring-8 ring-white">
+                    <Icon name={HOW_ICONS[index] || 'check'} className="h-7 w-7" />
+                    <span className="absolute -end-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-saffron-500 text-xs font-bold text-navy-950 ring-2 ring-white">
+                      {formatNumber(index + 1)}
+                    </span>
                   </span>
-                </div>
-                <h3 className="mt-5 text-lg font-semibold text-navy-900">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-sand-600">{step.text}</p>
-              </li>
-            ))}
-          </ol>
+                  <div className="mt-6 flex h-12 w-full max-w-[15rem] items-center justify-center *:w-full">
+                    <HowIllustration index={index} />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold text-navy-900">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-sand-600">{step.text}</p>
+                </Reveal>
+              ))}
+            </ol>
+          </div>
         </div>
       </section>
 
@@ -268,8 +428,10 @@ export default function Home() {
             action={<ArrowLink to="/artisans">{t('home.featured.cta')}</ArrowLink>}
           />
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.slice(0, 6).map((artisan) => (
-              <ArtisanCard key={artisan.id} artisan={artisan} />
+            {featured.slice(0, 6).map((artisan, index) => (
+              <Reveal key={artisan.id} delay={staggerDelay(index % 3)} className="grid">
+                <ArtisanCard artisan={artisan} />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -280,17 +442,31 @@ export default function Home() {
         <div className="container-page">
           <SectionHeading eyebrow={t('home.testimonials.eyebrow')} title={t('home.testimonials.title')} />
           <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {tm('home.testimonials.items').map((item) => (
-              <figure key={item.name} className="card flex flex-col p-6">
-                <blockquote className="flex-1 text-base leading-relaxed text-navy-900">{item.text}</blockquote>
-                <figcaption className="mt-6 flex items-end justify-between gap-3 border-t border-sand-200 pt-4">
-                  <div>
+            {tm('home.testimonials.items').map((item, index) => (
+              <Reveal as="figure" key={item.name} delay={staggerDelay(index)} className="card flex flex-col p-6 transition-shadow duration-300 hover:shadow-raised">
+                <svg aria-hidden="true" viewBox="0 0 32 32" fill="currentColor" className="h-8 w-8 text-saffron-400 rtl:-scale-x-100">
+                  <path d="M13 7C7.5 9.2 4 13.4 4 19v6h9v-9H8.6c.4-3.3 2.3-5.6 5.6-7.2L13 7Zm15 0c-5.5 2.2-9 6.4-9 12v6h9v-9h-4.4c.4-3.3 2.3-5.6 5.6-7.2L28 7Z" />
+                </svg>
+                <blockquote className="mt-4 flex-1 text-base leading-relaxed text-navy-900">{item.text}</blockquote>
+                <figcaption className="mt-6 flex items-center gap-3 border-t border-sand-200 pt-4">
+                  {TESTIMONIAL_AVATARS[index] && (
+                    <img
+                      src={TESTIMONIAL_AVATARS[index]}
+                      alt=""
+                      width={44}
+                      height={44}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-11 w-11 shrink-0 rounded-full bg-sand-200 object-cover ring-2 ring-saffron-200"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-navy-900">{item.name}</p>
                     <p className="mt-0.5 text-xs text-sand-600">{categoryName(item.service)} · {item.city}</p>
                   </div>
                   <StarRating rating={5} size="xs" />
                 </figcaption>
-              </figure>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -299,28 +475,38 @@ export default function Home() {
       {/* Cities */}
       <section className="bg-white py-16 sm:py-20">
         <div className="container-page grid gap-10 lg:grid-cols-12">
-          <div className="lg:col-span-4">
+          <Reveal className="lg:col-span-4">
             <p className="eyebrow">{t('home.cities.eyebrow')}</p>
             <h2 className="heading-section mt-3">{t('home.cities.title')}</h2>
             <p className="lead mt-3">{t('home.cities.subtitle')}</p>
-          </div>
-          <ul className="grid gap-px overflow-hidden rounded-xl border border-sand-200 bg-sand-200 sm:grid-cols-2 lg:col-span-8">
-            {CITY_STATS.map((city) => (
-              <li key={city.name} className="bg-white">
+          </Reveal>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:col-span-8">
+            {CITY_STATS.map((city, index) => (
+              <Reveal as="li" key={city.name} delay={staggerDelay(index % 4)}>
                 <Link
                   to={`/artisans?city=${encodeURIComponent(city.name)}`}
-                  className="group flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-saffron-50"
+                  className="group relative isolate flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-xl bg-navy-800 p-4 text-white shadow-card transition-shadow duration-300 hover:shadow-pop focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron-500 focus-visible:ring-offset-2"
                 >
-                  <span className="flex items-center gap-3">
-                    <Icon name="mapPin" className="h-4 w-4 text-saffron-600" />
-                    <span className="font-medium text-navy-900">{cityName(city.name)}</span>
+                  <img
+                    src={cityImage(city.name)}
+                    alt=""
+                    width={600}
+                    height={800}
+                    loading="lazy"
+                    decoding="async"
+                    className="img-zoom absolute inset-0 -z-10 h-full w-full object-cover"
+                  />
+                  <span className="photo-scrim -z-10" />
+                  <span className="flex items-center gap-1.5 text-base font-semibold">
+                    <Icon name="mapPin" className="h-4 w-4 text-saffron-400" />
+                    {cityName(city.name)}
                   </span>
-                  <span className="flex items-center gap-2 text-sm text-sand-600">
+                  <span className="mt-1 flex items-center justify-between gap-2 text-xs text-white/85">
                     {t('common.artisans', { count: city.artisans })}
-                    <Icon name="arrowRight" className="h-4 w-4 text-sand-400 transition-colors group-hover:text-navy" flipInRtl />
+                    <Icon name="arrowRight" className="h-4 w-4 text-saffron-300 opacity-0 transition-opacity duration-300 group-hover:opacity-100" flipInRtl />
                   </span>
                 </Link>
-              </li>
+              </Reveal>
             ))}
           </ul>
         </div>
@@ -329,7 +515,7 @@ export default function Home() {
       {/* For artisans + plans */}
       <section className="border-t border-sand-200 py-16 sm:py-20">
         <div className="container-page">
-          <div className="relative grid gap-10 overflow-hidden rounded-xl bg-navy-900 p-8 text-white sm:p-12 lg:grid-cols-12 lg:gap-12">
+          <Reveal className="relative grid gap-10 overflow-hidden rounded-xl bg-navy-900 p-8 text-white sm:p-12 lg:grid-cols-12 lg:gap-12">
             <ZelligePattern className="text-white/[0.05]" />
             <div className="relative lg:col-span-7">
               <p className="eyebrow text-saffron-300">{t('home.pro.eyebrow')}</p>
@@ -350,26 +536,27 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-          </div>
+          </Reveal>
 
           <div id="plans" className="mt-16 scroll-mt-24">
             <SectionHeading eyebrow={t('home.plans.eyebrow')} title={t('home.plans.title')} subtitle={t('home.plans.subtitle')} />
             <div className="mt-10 grid gap-4 lg:grid-cols-3">
-              {plans.map((plan) => {
+              {plans.map((plan, index) => {
                 const highlighted = planKey(plan) === 'pro';
                 return (
-                  <PlanCard
-                    key={plan.id}
-                    plan={plan}
-                    highlighted={highlighted}
-                    action={
-                      <Link to="/register?role=artisan" className={`btn w-full ${highlighted ? 'btn-accent' : 'btn-secondary'}`}>
-                        {Number(plan.price) === 0
-                          ? t('home.plans.ctaFree')
-                          : t('home.plans.ctaPaid', { plan: t(`plans.${planKey(plan)}.name`) })}
-                      </Link>
-                    }
-                  />
+                  <Reveal key={plan.id} delay={staggerDelay(index)} className="grid">
+                    <PlanCard
+                      plan={plan}
+                      highlighted={highlighted}
+                      action={
+                        <Link to="/register?role=artisan" className={`btn w-full ${highlighted ? 'btn-accent' : 'btn-secondary'}`}>
+                          {Number(plan.price) === 0
+                            ? t('home.plans.ctaFree')
+                            : t('home.plans.ctaPaid', { plan: t(`plans.${planKey(plan)}.name`) })}
+                        </Link>
+                      }
+                    />
+                  </Reveal>
                 );
               })}
             </div>
@@ -380,12 +567,12 @@ export default function Home() {
       {/* FAQ */}
       <section className="border-t border-sand-200 bg-white py-16 sm:py-20">
         <div className="container-page grid gap-10 lg:grid-cols-12">
-          <div className="lg:col-span-4">
+          <Reveal className="lg:col-span-4">
             <p className="eyebrow">{t('home.faq.eyebrow')}</p>
             <h2 className="heading-section mt-3">{t('home.faq.title')}</h2>
             <p className="lead mt-3">{t('home.faq.subtitle')}</p>
-          </div>
-          <div className="divide-y divide-sand-200 border-y border-sand-200 lg:col-span-8">
+          </Reveal>
+          <Reveal delay={0.1} className="divide-y divide-sand-200 border-y border-sand-200 lg:col-span-8">
             {tm('home.faq.items').map((item) => (
               <details key={item.q} className="group py-5">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-medium text-navy-900 [&::-webkit-details-marker]:hidden">
@@ -397,14 +584,14 @@ export default function Home() {
                 <p className="mt-3 max-w-2xl leading-relaxed text-sand-600">{item.a}</p>
               </details>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Final call to action */}
       <section className="relative overflow-hidden bg-saffron-500">
         <ZelligePattern className="text-navy-950/[0.06]" />
-        <div className="container-page relative flex flex-col items-start justify-between gap-6 py-14 md:flex-row md:items-center">
+        <Reveal className="container-page relative flex flex-col items-start justify-between gap-6 py-14 md:flex-row md:items-center">
           <div>
             <h2 className="text-2xl font-semibold tracking-tight text-navy-950 sm:text-[30px]">{t('home.finalCta.title')}</h2>
             <p className="mt-2 text-navy-900/80">{t('home.finalCta.text')}</p>
@@ -418,7 +605,7 @@ export default function Home() {
               {t('home.finalCta.secondary')}
             </Link>
           </div>
-        </div>
+        </Reveal>
       </section>
     </>
   );

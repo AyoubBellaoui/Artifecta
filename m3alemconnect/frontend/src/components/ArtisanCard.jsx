@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { categoryImage } from '../data/images';
 import { useI18n } from '../i18n/I18nProvider';
 import Avatar from './Avatar';
 import Icon from './Icon';
@@ -13,11 +14,38 @@ export default function ArtisanCard({ artisan }) {
   const city = cityName(artisan.city);
 
   return (
-    <article className="card group relative flex flex-col overflow-hidden transition-colors duration-200 hover:border-navy-300">
-      <div className="flex items-start justify-between gap-4 p-5">
+    <article className="card group relative flex h-full flex-col overflow-hidden transition-[border-color,box-shadow,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-navy-300 hover:shadow-raised motion-safe:hover:-translate-y-1">
+      {/* Trade cover. It stays below the stretched link (no z-index, earlier in the DOM). */}
+      <div aria-hidden="true" className="relative h-28 bg-navy-800">
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src={categoryImage(artisan.category_slug)}
+            alt=""
+            width={800}
+            height={600}
+            loading="lazy"
+            decoding="async"
+            className="img-zoom h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-950/70 via-navy-950/10 to-transparent" />
+        </div>
+        {trade && (
+          <span className="absolute bottom-3 start-5 rounded bg-white/95 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-saffron-800">
+            {trade}
+          </span>
+        )}
+        <Avatar
+          firstName={artisan.first_name}
+          lastName={artisan.last_name}
+          src={artisan.avatar_url}
+          size="xl"
+          className="absolute -bottom-8 end-5 shadow-raised ring-4 ring-white"
+        />
+      </div>
+
+      <div className="flex items-start justify-between gap-4 p-5 pe-24">
         <div className="min-w-0">
-          {trade && <p className="text-xs font-semibold uppercase tracking-[0.06em] text-saffron-700">{trade}</p>}
-          <div className="mt-1.5 flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
             <h3 className="truncate text-lg font-semibold text-navy-900">
               {/* Stretched link: the whole card is clickable while keeping one focusable element. */}
               <Link to={`/artisans/${artisan.id}`} className="after:absolute after:inset-0 focus-visible:outline-none">
@@ -33,7 +61,6 @@ export default function ArtisanCard({ artisan }) {
             </p>
           )}
         </div>
-        <Avatar firstName={artisan.first_name} lastName={artisan.last_name} src={artisan.avatar_url} />
       </div>
 
       <div className="flex items-end justify-between gap-4 px-5 pb-5">

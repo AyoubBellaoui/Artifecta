@@ -1,11 +1,38 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { CountUp } from "../motion";
 import { teamMembers } from "../../constants/site";
 
 const highlights = [
-  { value: "20+", label: "Projets livrés" },
-  { value: "3", label: "Experts clés" },
-  { value: "100%", label: "Clients satisfaits" },
+  { to: 20, suffix: "+", label: "Projets livrés" },
+  { to: 3, label: "Experts clés" },
+  { to: 100, suffix: "%", label: "Clients satisfaits" },
 ];
+
+// Shows the member's photo, or the default silhouette when there is none or it fails to load.
+function TeamAvatar({ member }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <div className="team-avatar">
+      {member.photo && !failed ? (
+        <img
+          src={member.photo}
+          alt={member.name}
+          width={96}
+          height={96}
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="38" r="18" />
+          <ellipse cx="50" cy="94" rx="34" ry="30" />
+        </svg>
+      )}
+    </div>
+  );
+}
 
 export default function AboutSection() {
   return (
@@ -104,7 +131,7 @@ export default function AboutSection() {
                   className="font-unbounded font-bold"
                   style={{ fontSize: "2.4rem", color: "#142638", lineHeight: 1 }}
                 >
-                  {h.value}
+                  <CountUp to={h.to} suffix={h.suffix} delay={0.4} />
                 </div>
                 <div
                   className="font-body text-sm mt-1"
@@ -155,22 +182,17 @@ export default function AboutSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.12 }}
+              whileHover={{
+                y: -6,
+                boxShadow: "0 18px 40px -18px rgba(20,38,56,0.35)",
+                transition: { duration: 0.3, delay: 0 },
+              }}
             >
               {/* Cover band with the profile picture overlapping it, as on Facebook */}
               <div style={{ background: "#a9c2d8", height: "110px" }} />
 
               <div style={{ padding: "0 28px 28px" }}>
-                <div className="team-avatar">
-                  {member.photo ? (
-                    <img src={member.photo} alt={member.name} />
-                  ) : (
-                    // Default profile silhouette until a real photo is added
-                    <svg viewBox="0 0 100 100" aria-hidden="true">
-                      <circle cx="50" cy="38" r="18" />
-                      <ellipse cx="50" cy="94" rx="34" ry="30" />
-                    </svg>
-                  )}
-                </div>
+                <TeamAvatar member={member} />
 
                 <h3
                   className="font-unbounded font-bold mb-2 mt-4"

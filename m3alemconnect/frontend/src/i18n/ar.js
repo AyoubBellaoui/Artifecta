@@ -161,9 +161,9 @@ const ar = {
       titleHighlight: 'بالقرب منك.',
       subtitle: 'قارن بين مهنيين موثّقين، واطّلع على آراء زبائن حقيقيين، واطلب عرض سعر مجانياً في بضع دقائق.',
       stats: [
-        { value: '4,8/5', label: 'متوسط تقييم الحرفيين' },
-        { value: '1.200+', label: 'حرفي مسجّل' },
-        { value: '12', label: 'مدينة مغطاة' },
+        { value: '4,8/5', count: 4.8, decimals: 1, suffix: '/5', label: 'متوسط تقييم الحرفيين' },
+        { value: '1.200+', count: 1200, suffix: '+', label: 'حرفي مسجّل' },
+        { value: '12', count: 12, label: 'مدينة مغطاة' },
       ],
       service: 'الخدمة',
       allServices: 'جميع الخدمات',

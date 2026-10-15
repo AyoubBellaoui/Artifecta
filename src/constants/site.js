@@ -12,24 +12,28 @@ export const navLinks = [
   { href: "#work", label: "Réalisations" },
 ];
 
-// Add `photo: "/ayoub.jpg"` (a file in public/) to show a real picture instead of the default avatar.
+// Team photos: put a square picture (about 400×400, face centred) in public/team/ and uncomment the
+// member's `photo` line. Without a photo, or if the file is missing, the card shows the default avatar.
 export const teamMembers = [
   {
     name: "Ayoub B.",
     initials: "AB",
     role: "Chef de groupe",
     specialty: "Développement Full Stack",
+    // photo: "/team/ayoub.webp",
   },
   {
     name: "Alaa",
     initials: "AL",
     role: "Développement Frontend",
     specialty: "Design UI/UX",
+    // photo: "/team/alaa.webp",
   },
   {
     name: "Abdelwadoud",
     initials: "AW",
     role: "Développement Backend",
+    // photo: "/team/abdelwadoud.webp",
   },
 ];
 
