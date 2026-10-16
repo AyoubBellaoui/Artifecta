@@ -55,7 +55,8 @@ export const projects = [
     gradient: "linear-gradient(135deg, #0f2744, #1a4a8a)",
     accentColor: "#c8a04a",
     logo: "/WhatsApp Image 2026-05-05 at 14.37.32.jpeg",
-    url: "https://m3alemconnect.vercel.app",
+    // Local dev server opens the local copy of M3alemConnect; the deployed site opens the live one.
+    url: import.meta.env.DEV ? "http://localhost:5174" : "https://m3alemconnect.vercel.app",
     featured: true,
   },
   {

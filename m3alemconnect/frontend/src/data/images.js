@@ -40,12 +40,31 @@ export const DEMO_PORTRAITS = Object.fromEntries(
   ].map((name) => [name, `${BASE}/artisans/${name.toLowerCase().replace(/\s+/g, '-')}.webp`]),
 );
 
-// Stand-in portraits for artisans who have not added a photo yet; the same artisan always gets the
-// same one. Used on public listings only, never for the signed-in user's own avatar.
-const FALLBACK_PORTRAITS = [1, 2, 3].map((n) => `${BASE}/artisans/portrait-${n}.webp`);
+const portrait = (file) => `${BASE}/artisans/${file}.webp`;
+
+// The platform's artisan accounts have no photo of their own, so each one gets a different stock
+// portrait, matched on first + last name (case, accents and spaces ignored). Add a line per new account.
+const ACCOUNT_PORTRAITS = Object.fromEntries(
+  [
+    ['Achraf Bellaoui', 'portrait-3'],
+    ['Haitem Tahiri', 'portrait-2'],
+    ['Hamid El Fassi', 'portrait-1'],
+    ['Kamal El Amrani', 'rachid-ouali'],
+    ['Zohir Benmoussa', 'khalid-benmoussa'],
+    ['Adil Berrada', 'hassan-el-fassi'],
+    ['Mehdi Alaoui', 'mehdi-alaoui'],
+    ['Samir Chraibi', 'samir-chraibi'],
+  ].map(([name, file]) => [normalizeKey(name), portrait(file)]),
+);
+
+// Stand-ins for any other artisan without a photo, chosen among faces not listed above; the same
+// artisan always gets the same one. Used on public listings only, never for the signed-in user's own avatar.
+const FALLBACK_PORTRAITS = ['youssef-amrani', 'adil-berrada', 'yassine-kettani'].map(portrait);
 
 export function artisanPhoto(artisan) {
   if (artisan?.avatar_url) return artisan.avatar_url;
+  const assigned = ACCOUNT_PORTRAITS[normalizeKey(`${artisan?.first_name ?? ''}${artisan?.last_name ?? ''}`)];
+  if (assigned) return assigned;
   const key = String(artisan?.id ?? `${artisan?.first_name}${artisan?.last_name}`);
   const hash = [...key].reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) >>> 0, 7);
   return FALLBACK_PORTRAITS[hash % FALLBACK_PORTRAITS.length];
